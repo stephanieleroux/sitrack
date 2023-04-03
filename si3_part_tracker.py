@@ -57,17 +57,16 @@ if __name__ == '__main__':
     else:
         jrec = 0
 
-    # Info about resolution from the seeding file name?
-    fncSsplt = split('_',path.basename(fNCseed))
-    print(fncSsplt)
-    # Are we in a idealized seeding or not:
 
-    
+    # Are we in a idealized seeding or not:
+    fncSsplt = split('_',path.basename(fNCseed))
     if fncSsplt[2] in ['nemoTsi3','nemoTmm']:
         print('\n *** Seems to be an idealized seeding of type "'+fncSsplt[2]+'"')
         cdtbin = '_idlSeed'
+        csfkm = '_Xkm'; # fixme, we can do it clean...
         
     else:
+        # Info about resolution from the seeding file name?
         csfkm = '_'+split( '_', split('\.',fNCseed)[-2] )[-1]
         kres=-4
         if csfkm[-2:]!='km':
