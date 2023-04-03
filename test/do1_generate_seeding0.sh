@@ -2,7 +2,7 @@
 
 . ./conf.bash
 
-EXE1="${SITRACK_DIR}/generate_idealized_seeding.py"
+EXE1="${SITRACK_DIR}/tools/generate_idealized_seeding.py"
 EXE2="python3 -u ${SITRACK_DIR}/si3_part_tracker.py"
 
 echo $NDATE1
