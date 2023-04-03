@@ -13,6 +13,7 @@ import numpy as np
 from re import split
 
 import mojito   as mjt
+import sitrack  as sit
 
 idebug=0
 iplot=1
@@ -66,10 +67,10 @@ if __name__ == '__main__':
 
     if lnemoMM or lnemoSI3:
         # Getting model grid metrics and friends:
-        imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = mjt.GetModelGrid( cf_mm )
+        imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = sit.GetModelGrid( cf_mm )
 
     if lnemoSI3:
-        xIC = mjt.GetModelSeaIceConc( cf_si3, krec=krec, expected_shape=np.shape(imaskt) )
+        xIC = sit.GetModelSeaIceConc( cf_si3, krec=krec, expected_shape=np.shape(imaskt) )
         #
     elif lnemoMM:
         # A fake sea-ice concentration:
@@ -83,11 +84,11 @@ if __name__ == '__main__':
 
 
     if seeding_type in ['nemoTmm','nemoTsi3']:
-        XseedG = mjt.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=None )
+        XseedG = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=None )
         #
     elif seeding_type=='debug':
-        if idebug in [0,1,2]: XseedG = mjt.debugSeeding()
-        if idebug in [3]:     XseedG = mjt.debugSeeding1()
+        if idebug in [0,1,2]: XseedG = sit.debugSeeding()
+        if idebug in [3]:     XseedG = sit.debugSeeding1()
         #
     else:
          print(' ERROR: `seeding_type` =',seeding_type,' is unknown!')
@@ -131,23 +132,23 @@ if __name__ == '__main__':
         del idxKeep
 
         
-    XseedC = mjt.Geo2CartNPSkm1D( XseedG ) ; # same for seeded initial positions, XseedG->XseedC
+    XseedC = sit.Geo2CartNPSkm1D( XseedG ) ; # same for seeded initial positions, XseedG->XseedC
         
     XseedG = np.reshape( XseedG, (1,nP,2) )
     XseedC = np.reshape( XseedC, (1,nP,2) )
     
     makedirs( './nc', exist_ok=True )
-    foutnc = './nc/mojito_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'_HSS'+str(iHSS)+'.nc'
+    foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'_HSS'+str(iHSS)+'.nc'
     
     print('\n *** Saving seeding file for date =',mjt.epoch2clock(zTime[0]))
     
-    kk = mjt.ncSaveCloudBuoys( foutnc, zTime, zIDs, XseedC[:,:,0], XseedC[:,:,1], XseedG[:,:,0], XseedG[:,:,1],
+    kk = sit.ncSaveCloudBuoys( foutnc, zTime, zIDs, XseedC[:,:,0], XseedC[:,:,1], XseedG[:,:,0], XseedG[:,:,1],
                                corigin='idealized_seeding' )
 
     if iplot>0:
 
         makedirs( './figs', exist_ok=True )
-        ffig = './figs/mojito_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'.png'
+        ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'.png'
 
         
         mjt.ShowBuoysMap( 0, XseedG[0,:,1], XseedG[0,:,0], pvIDs=zIDs,

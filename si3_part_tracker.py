@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     print('')
     print('##########################################################')
-    print('#            MOJITO ICE PARTICULES TRACKER               #')
+    print('#            SITRACK ICE PARTICULES TRACKER              #')
     print('##########################################################\n')
 
     if not len(argv) in [4,5]:
@@ -58,19 +58,28 @@ if __name__ == '__main__':
         jrec = 0
 
     # Info about resolution from the seeding file name?
-    print(fNCseed)
-    csfkm = '_'+split( '_', split('\.',fNCseed)[-2] )[-1]
-    kres=-4
-    if csfkm[-2:]!='km':
-        csfkm, kres = '', -3
-    # Time bin used for RGPS:
-    cdtbin = '_'+split( '_', split('\.',fNCseed)[-2] )[kres]
-    if cdtbin[1:3]!='dt':
-        print('ERROR: we could not figure out `cdtbin`!'); exit(0)
+    fncSsplt = split('_',path.basename(fNCseed))
+    print(fncSsplt)
+    # Are we in a idealized seeding or not:
+
+    
+    if fncSsplt[2] in ['nemoTsi3','nemoTmm']:
+        print('\n *** Seems to be an idealized seeding of type "'+fncSsplt[2]+'"')
+        cdtbin = '_idlSeed'
+        
+    else:
+        csfkm = '_'+split( '_', split('\.',fNCseed)[-2] )[-1]
+        kres=-4
+        if csfkm[-2:]!='km':
+            csfkm, kres = '', -3
+        # Time bin used for RGPS:
+        cdtbin = '_'+split( '_', split('\.',fNCseed)[-2] )[kres]
+        if cdtbin[1:3]!='dt':
+            print('ERROR: we could not figure out `cdtbin`!'); exit(0)
     
     # Some strings and start/end date of Seeding input file:
     idateSeedA, idateSeedB, SeedName, SeedBatch = sit.SeedFileTimeInfo( fNCseed, iverbose=idebug )
-    
+
     # Same for model input file + time records info:
     Nt0, ztime_model, idateModA, idateModB, ModConf, ModExp = sit.ModelFileTimeInfo( cf_uv, iverbose=idebug )
     
