@@ -182,8 +182,8 @@ if __name__ == '__main__':
     del xPosC0, xPosG0
 
     if iplot>0 and idebug>1:
-        mjt.ShowBuoysMap( 0, xPosG[0,:,1], xPosG[0,:,0], pvIDs=IDs, cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+'%4.4i'%(jt)+'.png',
-                          cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' )
+        mjt.ShowBuoysMap( 0, xPosG[0,:,1], xPosG[0,:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+'%4.4i'%(jt)+'.png',
+                          cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' ) ; #, pvIDs=IDs
 
 
 
@@ -358,10 +358,10 @@ if __name__ == '__main__':
             if jt%isubsamp_fig == 0:
                 zLon = np.ma.masked_where( xmask[jt,:,1]==0, xPosG[jt,:,1] )
                 zLat = np.ma.masked_where( xmask[jt,:,0]==0, xPosG[jt,:,0] )
-                mjt.ShowBuoysMap( vTime[jt], zLon, zLat, pvIDs=IDs,
+                mjt.ShowBuoysMap( vTime[jt], zLon, zLat,
                                   cfig=cfdir+'/Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+'%4.4i'%(jt)+'_'+sit.epoch2clock(vTime[jt])+'.png',
                                   cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1.,
-                                  title='IceTracker + SI3 '+ModExp+' u,v fields' )
+                                  title='IceTracker + SI3 '+ModExp+' u,v fields' ) ; # , pvIDs=IDs
                 del zLon, zLat
 
 
