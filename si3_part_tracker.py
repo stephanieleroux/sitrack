@@ -98,7 +98,9 @@ if __name__ == '__main__':
         exit(0)
 
     cfdir = './figs/tracking'
-    if iplot>0 and not path.exists(cfdir): mkdir(cfdir)
+    if iplot>0 and not path.exists(cfdir):
+        if not path.exists('./figs'): mkdir('./figs')
+        mkdir(cfdir)
     for cd in ['nc', 'npz' ]:
         if not path.exists(cd): mkdir(cd)
 
