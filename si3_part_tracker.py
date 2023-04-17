@@ -67,15 +67,16 @@ if __name__ == '__main__':
         
     else:
         # Info about resolution from the seeding file name?
-        csfkm = '_'+split( '_', split('\.',fNCseed)[-2] )[-1]
-        kres=-4
+        csfkm = '_'+split( '_', split('\.',fNCseed)[-2] )[-2]
+        kres=-5
+        #print(csfkm[-2:])
         if csfkm[-2:]!='km':
-            csfkm, kres = '', -3
+            csfkm, kres = '', -4
         # Time bin used for RGPS:
         cdtbin = '_'+split( '_', split('\.',fNCseed)[-2] )[kres]
         if cdtbin[1:3]!='dt':
-            print('ERROR: we could not figure out `cdtbin`!'); exit(0)
-    
+            print('ERROR: we could not figure out `cdtbin`!',cdtbin); exit(0)
+        #print(cdtbin[1:3]);exit(0)
     # Some strings and start/end date of Seeding input file:
     idateSeedA, idateSeedB, SeedName, SeedBatch = sit.SeedFileTimeInfo( fNCseed, iverbose=idebug )
 
