@@ -68,18 +68,18 @@ if __name__ == '__main__':
     else:
         # Info about resolution from the seeding file name?
         lok=False
-        itst=0
+        itst=1        
         while not lok:
             itst-=1
             csfkm = '_'+split( '_', split('\.',fNCseed)[-2] )[itst]
             kres=-3+itst            
-            #print('LOLO:',csfkm[-2:],lok,csfkm)
-            # Time bin used for RGPS:
+            #print('LOLO: csfkm[-2:],lok,csfkm =',csfkm[-2:],lok,csfkm)
             cdtbin = '_'+split( '_', split('\.',fNCseed)[-2] )[kres]
             #print('LOLO: cdtbin =',cdtbin)
-            lok = ( csfkm[-2:]=='km' and cdtbin[1:3]=='dt' )            
+            lok = ( csfkm[-2:]=='km' and cdtbin[1:3]=='dt' ) or ( cdtbin[1:3]=='dt' and itst==0 )
             if itst<-4:
                 print('ERROR: we could not figure out `csfkm` and `cdtbin` from file name!',csfkm, cdtbin); exit(0)
+        if itst==0: csfkm = ''
     #print(csfkm, cdtbin);exit(0)
     
     # Some strings and start/end date of Seeding input file:
