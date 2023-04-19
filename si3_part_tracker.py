@@ -37,6 +37,38 @@ iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
 
 
 
+def argument_parsing():
+    '''
+    ARGUMENT PARSING / USAGE
+    '''
+    import argparse as ap
+    #
+    parser = ap.ArgumentParser(description='SITRACK ICE PARTICULES TRACKER')
+    rqrdNam = parser.add_argument_group('required arguments')
+    rqrdNam.add_argument('-i', '--fsi3', required=True,  help='output file of SI3 containing ice velocities ans co')
+    rqrdNam.add_argument('-m', '--fmmm',  required=True, help='model `mesh_mask` file of NEMO config used in SI3 run')
+    rqrdNam.add_argument('-s', '--fsdg', required=True,  help='seeding file')
+    #
+    parser.add_argument('-k', '--frec' , default=0,      help='record of seeding file to use to seed from')
+    parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on model domain) to control seeding region')
+    #parser.add_argument('-t', '--styp' , default='nemoTsi3',  help='seeding type ')
+    #
+    #parser.set_defaults(fmsk=None)
+    #
+    args = parser.parse_args()
+    print('')
+    print(' *** SI3 file to get ice velocities from => ', args.fsi3)
+    print(' *** SI3 `mesh_mask` metrics file        => ', args.fmmm)
+    print(' *** Seeding file and record to use      => ', args.fsdg, args.frec )
+    #
+    if args.fmsk:
+        print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
+    #
+    return args.fsi3, args.fmmm, args.fsdg, args.frec, args.fmsk
+
+
+
+
 if __name__ == '__main__':
 
 
@@ -45,19 +77,22 @@ if __name__ == '__main__':
     print('#            SITRACK ICE PARTICULES TRACKER              #')
     print('##########################################################\n')
 
-    if not len(argv) in [4,5]:
-        print('Usage: '+argv[0]+' <ice_file_velocities_SI3> <mesh_mask> <seeding_file.nc> (<#record_to_seed_with>)')
-        exit(0)
 
-    cf_uv = argv[1]
-    cf_mm = argv[2]
-    fNCseed = argv[3]
-    if len(argv)==5:
-        jrec = int(argv[4])
-    else:
-        jrec = 0
+    cf_uv, cf_mm, fNCseed, jrec, cf_force_msk = argument_parsing()
 
+    print('cf_uv =',cf_uv)
+    print('cf_mm =',cf_mm)
+    print('fNCseed =',fNCseed)
+    print('jrec =',jrec)
 
+    lForceSeedRegion = False
+    if cf_force_msk:
+        lForceSeedRegion = True
+        print('cf_force_msk =',cf_force_msk)
+    print('\n')
+    #exit(0)
+    
+    
     # Are we in a idealized seeding or not:
     fncSsplt = split('_',path.basename(fNCseed))
     if fncSsplt[2] in ['nemoTsi3','nemoTmm']:

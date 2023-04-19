@@ -17,7 +17,7 @@ fi
 
 
 # Actually that the ice tracker that should look inside the nc file to get date 1 and 2:
-CMD="${EXE2} ${FSI3IN} ${FNMM} ${fout}" ; # with nc file for init seed...
+CMD="${EXE2} -i ${FSI3IN} -m ${FNMM} -s ${fout}" ; # with nc file for init seed...
 echo
 echo " *** About to launch:"; echo "     ${CMD}"; echo
 ${CMD}
