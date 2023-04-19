@@ -327,7 +327,7 @@ def debugSeeding1():
     return zLatLon
 
 
-def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=None ):
+def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=[] ):
 
     zmsk = pmskT[::khss,::khss]
     zlat = platT[::khss,::khss]
@@ -335,16 +335,20 @@ def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=None ):
 
     (Nj,Ni) = np.shape(zmsk)
     ztmp = np.zeros((Nj,Ni))
-    
-    #if fmsk_rstrct:
-    #    with Dataset(fmsk_rstrct) as id_mr:
-    #        maskR = id_mr.variables['mask'][::khss,::khss]
-    #        if np.shape(maskR) != (Nj,Ni):
-    #            print('ERROR [nemoSeed()]: restricted area mask does not agree in shape with model output!'); exit(0)
+
+    lfmsk_rstrct = (np.shape(fmsk_rstrct) == np.shape(pmskT))
+    if lfmsk_rstrct:
+        maskR = fmsk_rstrct[::khss,::khss]
+        if np.shape(maskR) != (Nj,Ni):
+            print('ERROR [nemoSeed()]: restricted area mask does not agree in shape with model output!'); exit(0)
     
     msk_T = np.zeros((Nj,Ni), dtype='i1')
 
     msk_T[:,:] = zmsk[:,:]
+
+
+    if lfmsk_rstrct:
+        msk_T[:,:] = msk_T[:,:]*maskR[:,:]
 
     # Only north of ...
     msk_T[np.where(zlat < 55.)] = 0

@@ -38,6 +38,7 @@ case ${host} in
     "mcp-oceannext-01")
         export DATA_DIR="/data/gcm_setup"
         #
+        iHSS=8
         NJPAR=4       
         #
         ;;
@@ -63,6 +64,8 @@ FSI3IN="${NEMO_CONF}_ICE-${NEMO_EXP}_1h_${DATE1}_${DATE2}_icemod.nc4"
 export FSI3IN="${DATA_DIR}/${NEMO_CONF}/${NEMO_CONF}_ICE-${NEMO_EXP}-S/${SBDIR}${cxtra}/${FSI3IN}"
 
 export FNMM="${DATA_DIR}/${NEMO_CONF}/${NEMO_CONF}.L31-I/mesh_mask_${NEMO_CONF}_L31_4.2_1stLev.nc"
+
+export FFSM="${DATA_DIR}/${NEMO_CONF}/${NEMO_CONF}.L31-I/mask_RGPS_${NEMO_CONF}.nc"
 
 mkdir -p ./figs ./npz
 

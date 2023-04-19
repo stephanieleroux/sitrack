@@ -22,11 +22,59 @@ seeding_type='debug' ; # By default, ha
 
 iHSS=15 ; # horizontal sub-sampling for NEMO points initialization...
 
-ldo_coastal_clean = True
+ldo_coastal_clean = False
 MinDistFromLand  = 200 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
-l_CentralArctic = True ; # only keep points of the central Arctic
+l_CentralArctic = False ; # only keep points of the central Arctic
+
+
+
+
+
+
+
+def __argument_parsing__():
+    '''
+    ARGUMENT PARSING / USAGE
+    '''
+    import argparse as ap
+    #
+    parser = ap.ArgumentParser(description='SITRACK ICE PARTICULES TRACKER')
+    rqrdNam = parser.add_argument_group('required arguments')
+    #
+    rqrdNam.add_argument('-d', '--dat0', required=True,  help='initial date in the form <YYYY-MM-DD_hh:mm:ss>')
+    #
+    parser.add_argument('-m', '--fmmm' , default=None,   help='model `mesh_mask` file of NEMO config used in SI3 run')
+    parser.add_argument('-i', '--fsi3' , default=None,   help='output file of SI3 containing sea-ice concentration')
+    parser.add_argument('-v', '--nsic' , default='siconc',help='name of sea-ice concentration in SI3 file (default="siconc")')
+    parser.add_argument('-k', '--krec' , type=int, default=0,   help='record of seeding file to use to seed from (only if use SI3 file!)')
+    parser.add_argument('-S', '--ihss' , type=int, default=1,   help='horizontal subsampling factor to apply')
+    parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on SI3 model domain) to control seeding region')
+    args = parser.parse_args()
+
+    if args.fsi3 and not args.fmmm:
+        #print('ERROR: chose between SI3 output file or MeshMask file !!! (i.e. `-m` or `-i`)')
+        print('ERROR: you have to specify a MeshMask file with `-m` when using SI3 file!')
+        exit(0)
+    
+    print('')
+    print(' *** Date for initilization => ', args.dat0)
+    if args.fsi3:
+        print(' *** SI3 file to get sea-ice concentration from => ', args.fsi3)
+        print('     ==> name of sea-ice concentration field    => ', args.nsic )
+        print('     ==> record to use                   => ', args.krec )
+    if args.fmmm:
+        print(' *** SI3 `mesh_mask` metrics file        => ', args.fmmm)
+    print(' *** Horizontal subsampling factor to apply => ', args.ihss)
+    if args.fmsk:
+        print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
+    #
+    return args.dat0, args.fsi3, args.nsic, args.krec, args.fmmm, args.ihss, args.fmsk
+
+
+
+
 
 if __name__ == '__main__':
 
@@ -36,46 +84,61 @@ if __name__ == '__main__':
         if cdata_dir==None:
             print('\n ERROR: Set the `DATA_DIR` environement variable!\n'); exit(0)
         fdist2coast_nc = cdata_dir+'/data/dist2coast/dist2coast_4deg_North.nc'
-    
-    if not len(argv) in [2,3,5]:
-        print('Usage: '+argv[0]+' <YYYY-MM-DD_hh:mm:ss> (<mesh_mask>,<iHSS>) (<si3_output>) (<rec#>[if si3_output])')
-        exit(0)
 
-    cdate0 = argv[1]
-
-    lnemoMM  = ( len(argv)==3 )
-    lnemoSI3 = ( len(argv)==5 )
-    
-    if lnemoMM or lnemoSI3:
-        cvf = split(',',argv[2])
-        cf_mm = cvf[0]
-        iHSS = int(cvf[1])
-        if iHSS<1 or iHSS>20:
-            print('ERROR: chosen horizontal subsampling makes no sense iHSS=',iHSS)
-            exit(0)
+    lnemoMM  = False
+    lnemoSI3 = False
         
-    if lnemoMM:
+    cdate0, cf_si3, cv_sic, krec, cf_mm, iHSS, cf_force_msk = __argument_parsing__()
+
+    if cf_mm:
+        lnemoMM  = True
         seeding_type = 'nemoTmm'
-    elif lnemoSI3:
+    if cf_si3:
+        lnemoSI3 = True
         seeding_type = 'nemoTsi3'
-        cf_si3 = argv[3]
-        krec = int(argv[4])
+
+    lForceSeedRegion = False
+    if cf_force_msk:
+        lForceSeedRegion = True
+
+    
+    print('\n *** Input SUMMARY:')
+    print('cdate0 =',cdate0)
+    if lnemoSI3:
+        print('cf_si3 =',cf_si3)
+        print('cv_sic =',cv_sic)
+        print('krec =',krec)
+    if lnemoMM:
+        print('cf_mm =',cf_mm)
+    print('iHSS =',iHSS)
+    if lForceSeedRegion:
+        print('cf_force_msk =',cf_force_msk)
+    if iHSS<1 or iHSS>20:
+        print('ERROR: chosen horizontal subsampling makes no sense iHSS=',iHSS)
+        exit(0)        
+    if lnemoSI3:
         if krec<0:
-            print('ERROR: chosen record to read is < 0!',krec)
-            exit(0)
+            print('ERROR: chosen record to read is < 0!',krec); exit(0)
+    print('')
 
-
+            
     if lnemoMM or lnemoSI3:
         # Getting model grid metrics and friends:
         imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = sit.GetModelGrid( cf_mm )
 
     if lnemoSI3:
-        xIC = sit.GetModelSeaIceConc( cf_si3, krec=krec, expected_shape=np.shape(imaskt) )
+        xIC = sit.GetModelSeaIceConc( cf_si3, name=cv_sic, krec=krec, expected_shape=np.shape(imaskt) )
         #
     elif lnemoMM:
         # A fake sea-ice concentration:
         xIC = np.ones( np.shape(imaskt) )
 
+    FSmask = None
+    if lForceSeedRegion:
+        FSmask = sit.GetSeedMask( cf_force_msk, mvar='tmask' )
+        print(FSmask[::50,::20])                                                                                                                                                               
+        if np.shape(FSmask) != np.shape(imaskt):
+            print('ERROR: `shape(FSmask) != shape(imaskt)`'); exit(0)
 
     
     ############################
@@ -84,7 +147,7 @@ if __name__ == '__main__':
 
 
     if seeding_type in ['nemoTmm','nemoTsi3']:
-        XseedG = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=None )
+        XseedG = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=FSmask )
         #
     elif seeding_type=='debug':
         if idebug in [0,1,2]: XseedG = sit.debugSeeding()
@@ -110,7 +173,7 @@ if __name__ == '__main__':
     print( zTime )
 
     if ldo_coastal_clean:
-        mask = mjt.MaskCoastal( XseedG, rMinDistFromLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
+        mask = mjt.MaskCoastal( XseedG, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
         print(' * Need to remove '+str(nP-np.sum(mask))+' points because too close to land! ('+str(MinDistFromLand)+'km)')
         nP = np.sum(mask) ; # new size once buoys too close to land removed...
         (idxKeep,) = np.where(mask==1)
@@ -151,9 +214,9 @@ if __name__ == '__main__':
         ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'.png'
 
         
-        mjt.ShowBuoysMap( 0, XseedG[0,:,1], XseedG[0,:,0], pvIDs=zIDs,
+        mjt.ShowBuoysMap( 0, XseedG[0,:,1], XseedG[0,:,0],
                           cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
                           zoom=1., title='Seeding initialization' )
-
+        # pvIDs=zIDs,
     
 

@@ -37,7 +37,7 @@ iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
 
 
 
-def argument_parsing():
+def __argument_parsing__():
     '''
     ARGUMENT PARSING / USAGE
     '''
@@ -49,8 +49,8 @@ def argument_parsing():
     rqrdNam.add_argument('-m', '--fmmm',  required=True, help='model `mesh_mask` file of NEMO config used in SI3 run')
     rqrdNam.add_argument('-s', '--fsdg', required=True,  help='seeding file')
     #
-    parser.add_argument('-k', '--frec' , default=0,      help='record of seeding file to use to seed from')
-    parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on model domain) to control seeding region')
+    parser.add_argument('-k', '--krec' , type=int, default=0,      help='record of seeding file to use to seed from')
+    #parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on model domain) to control seeding region')
     #parser.add_argument('-t', '--styp' , default='nemoTsi3',  help='seeding type ')
     #
     #parser.set_defaults(fmsk=None)
@@ -59,12 +59,12 @@ def argument_parsing():
     print('')
     print(' *** SI3 file to get ice velocities from => ', args.fsi3)
     print(' *** SI3 `mesh_mask` metrics file        => ', args.fmmm)
-    print(' *** Seeding file and record to use      => ', args.fsdg, args.frec )
+    print(' *** Seeding file and record to use      => ', args.fsdg, args.krec )
     #
-    if args.fmsk:
-        print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
+    #if args.fmsk:
+    #    print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
     #
-    return args.fsi3, args.fmmm, args.fsdg, args.frec, args.fmsk
+    return args.fsi3, args.fmmm, args.fsdg, args.krec
 
 
 
@@ -78,19 +78,13 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, jrec, cf_force_msk = argument_parsing()
+    cf_uv, cf_mm, fNCseed, jrec = __argument_parsing__()
 
     print('cf_uv =',cf_uv)
     print('cf_mm =',cf_mm)
     print('fNCseed =',fNCseed)
     print('jrec =',jrec)
-
-    lForceSeedRegion = False
-    if cf_force_msk:
-        lForceSeedRegion = True
-        print('cf_force_msk =',cf_force_msk)
     print('\n')
-    #exit(0)
     
     
     # Are we in a idealized seeding or not:
@@ -150,7 +144,7 @@ if __name__ == '__main__':
     if iUVstrategy==1:
         # Get extra U,V-point metrics:
         xYv, xXv, xYu, xXu = sit.GetModelUVGrid( cf_mm )
-
+        
     # Allocating arrays for model data:
     (Nj,Ni) = np.shape( imaskt )
     xUu = np.zeros((Nj,Ni))

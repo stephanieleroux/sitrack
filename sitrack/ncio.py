@@ -86,6 +86,25 @@ def GetModelUVGrid( fNCmeshmask ):
     return zYv, zXv, zYu, zXu
 
 
+def GetSeedMask( fFSmask, mvar='tmask' ):
+
+    chck4f( fFSmask)
+
+    # Reading mesh metrics into mesh-mask file:
+    with Dataset(fFSmask) as id_mm:
+        kmaskt = id_mm.variables[mvar][:,:]
+
+    (nj,ni) = np.shape(kmaskt)
+
+    kmaskt = np.array(kmaskt, dtype='i1')
+
+    return kmaskt
+
+
+
+
+
+
 def GetModelSeaIceConc( fNCsi3, name='siconc', krec=0, expected_shape=[] ):
 
     chck4f( fNCsi3)
