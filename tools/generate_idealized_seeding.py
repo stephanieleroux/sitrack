@@ -199,9 +199,24 @@ if __name__ == '__main__':
     
     
     if lCoarsen:
-        # both XseedGC and XseedYX are in C-array-indexing...
-        # Coarsening:
-        rd_ss = float(icrsn)
+        # Coarsening:        
+        if   icrsn==20:
+            rd_ss = 15
+        elif icrsn==40:
+            rd_ss = 35
+        elif icrsn==80:
+            rd_ss = 73
+        elif icrsn==160:
+            rd_ss = 145
+        elif icrsn==320:
+            rd_ss = 295
+        elif icrsn==640:
+            rd_ss = 620
+        else:
+            print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
+            exit(0)
+        
+        #MIND: both XseedGC and XseedYX are in C-array-indexing...
         print('\n *** Applying spatial sub-sampling with radius: '+str(round(rd_ss,2))+'km')
         nPss, zYXss, idxKeep = mjt.SubSampCloud( rd_ss, XseedYX[:,:], convArray='C' )
         zGCss = XseedGC[idxKeep,:].copy()
