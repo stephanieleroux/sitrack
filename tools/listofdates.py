@@ -32,7 +32,9 @@ if __name__ == '__main__':
     #print(' *** From '+cdtA+' to '+cdtB+' !')
 
     idateA, idateB = clock2epoch(cdtA), clock2epoch(cdtB)
-    
+
+    # Adding 1 extra go:
+    idateB += dt_sec
             
     nT = int( (idateB+dt_sec - idateA)/dt_sec )
 

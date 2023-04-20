@@ -98,8 +98,9 @@ if __name__ == '__main__':
     if fncSsplt[2] in ['nemoTsi3','nemoTmm']:
         print('\n *** Seems to be an idealized seeding of type "'+fncSsplt[2]+'"')
         cdtbin = '_idlSeed'
-        csfkm = '_Xkm'; # fixme, we can do it clean...
-        
+        csfkm = '_'+split('\.',fncSsplt[-1])[0]
+        if csfkm[-2:]!='km': csfkm = '_Xkm'
+        #
     else:
         # Info about resolution from the seeding file name?
         lok=False
@@ -408,8 +409,10 @@ if __name__ == '__main__':
             if jt%isubsamp_fig == 0:
                 zLon = np.ma.masked_where( xmask[jt,:,1]==0, xPosG[jt,:,1] )
                 zLat = np.ma.masked_where( xmask[jt,:,0]==0, xPosG[jt,:,0] )
-                mjt.ShowBuoysMap( vTime[jt], zLon, zLat,
-                                  cfig=cfdir+'/Pos_buoys_'+SeedBatch+csfkm+'_'+ModExp+'_'+'%4.4i'%(jt)+'_'+sit.epoch2clock(vTime[jt])+'.png',
+                ctag = cdt1+'-'+cdt2+'_'+'%4.4i'%(jt)
+                cfig = cfdir+'/Pos_buoys_'+SeedBatch+csfkm+'_'+ModExp+'_'+ctag+'.png'
+
+                mjt.ShowBuoysMap( vTime[jt], zLon, zLat, cfig=cfig,
                                   cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1.,
                                   title='IceTracker + SI3 '+ModExp+' u,v fields' ) ; # , pvIDs=IDs
                 del zLon, zLat
