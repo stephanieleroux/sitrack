@@ -4,10 +4,19 @@
 
 EXE="${SITRACK_DIR}/tools/generate_idealized_seeding.py"
 
+EXE2="${SITRACK_DIR}/tools/listofdates.py"
 
-#LIST_DATES="19970101 19970104 19970107 19970110"
+LIST_DATES=`${EXE2} ${DATE1} ${DATE2} 3`
 
-LIST_DATES="19970107"
+echo
+echo "LIST_DATES = ${LIST_DATES}"
+echo
+
+
+mkdir -p ./logs
+
+ijob=0
+
 
 for date in ${LIST_DATES}; do
 
@@ -21,12 +30,21 @@ for date in ${LIST_DATES}; do
     echo $NDATE0
     echo
 
-    fout="./nc/sitrack_seeding_nemoTsi3_${NDATE0}_HSS${iHSS}.nc"
+    str="${NDATE0}_crsn{ICOARSEN}km"
+    
+    flog="seeding_${str}"
+    
+    fout="./nc/sitrack_seeding_nemoTsi3_${str}.nc"
 
-
-    CMD="${EXE} -d ${LDATE0} -m ${FNMM} -S ${iHSS} -i ${FSI3IN} -k 0 -f ${FFSM} -C ${ICOARSEN}"
+    CMD="${EXE} -d ${LDATE0} -m ${FNMM} -i ${FSI3IN} -k 0 -f ${FFSM} -C ${ICOARSEN}"
     echo
     echo " *** About to launch:"; echo "     ${CMD}"; echo
-    ${CMD}
-
+    ijob=$((ijob+1))
+    ${CMD} 1>"./logs/out_${flog}.out" 2>"./logs/err_${flog}.err" &
+    echo
+    if [ $((ijob%NJPAR)) -eq 0 ]; then
+        echo "Waiting! (ijob = ${ijob})...."
+        wait; echo; echo
+    fi
+    
 done

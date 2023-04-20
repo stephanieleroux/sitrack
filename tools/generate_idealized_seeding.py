@@ -196,8 +196,12 @@ if __name__ == '__main__':
     # Convert geoo coordinates to projected polar proj:
     XseedYX = sit.Geo2CartNPSkm1D( XseedGC ) ; # same for seeded initial positions, XseedGC->XseedYX
 
+
+    cextra = ''
     
-    
+    if iHSS>1:
+        cextra = '_HSS'+str(iHSS)
+        
     if lCoarsen:
         # Coarsening:        
         if   icrsn==20:
@@ -215,6 +219,8 @@ if __name__ == '__main__':
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
             exit(0)
+
+        cextra='_'+str(icrsn)+'km'
         
         #MIND: both XseedGC and XseedYX are in C-array-indexing...
         print('\n *** Applying spatial sub-sampling with radius: '+str(round(rd_ss,2))+'km')
@@ -246,7 +252,7 @@ if __name__ == '__main__':
 
     
     makedirs( './nc', exist_ok=True )
-    foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'_HSS'+str(iHSS)+'.nc'
+    foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+cextra+'.nc'
     
     print('\n *** Saving seeding file for date =',mjt.epoch2clock(zTime[0]))
     
@@ -258,9 +264,11 @@ if __name__ == '__main__':
         makedirs( './figs', exist_ok=True )
         ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'.png'
 
+
+        cextra = str.replace(cextra, '_', ' ')
         
         mjt.ShowBuoysMap( zTime[0], XseedGC[0,:,1], XseedGC[0,:,0],
                           cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
-                          zoom=1., title='Seeding initialization' )
+                          zoom=1., title='Seeding initialization'+cextra )
     
 
