@@ -262,7 +262,7 @@ if __name__ == '__main__':
     if iplot>0:
 
         makedirs( './figs', exist_ok=True )
-        ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'.png'
+        ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+cextra+'.png'
 
 
         cextra = str.replace(cextra, '_', ' ')

@@ -27,14 +27,14 @@ FREQ_AN_DAYS=3 ; # frequency in days of the deformation analysis...
 
 xtra_sfx=""
 
-ICOARSEN=0
+LCOARSEN="0"
 
 host=`hostname | cut -d '.' -f2`
 case ${host} in
     "merlat")
         #/MEDIA/data/NANUK4/BBM00/NANUK4_ICE-BBM00_1h_19970101_19970331_icemod_LIGHT480.nc4
         export DATA_DIR="/MEDIA/data"
-        export iHSS=1 ; RESKM=12 ; ICOARSEN=160
+        export iHSS=1 ; RESKM=12 ; LCOARSEN="160 320"
         #export iHSS=6 ; RESKM=73
         #export iHSS=4 ; RESKM=49
         #export iHSS=10 ; RESKM=120

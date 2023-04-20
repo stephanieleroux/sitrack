@@ -30,21 +30,27 @@ for date in ${LIST_DATES}; do
     echo $NDATE0
     echo
 
-    str="${NDATE0}_crsn{ICOARSEN}km"
-    
-    flog="seeding_${str}"
-    
-    fout="./nc/sitrack_seeding_nemoTsi3_${str}.nc"
+    for ICOARSEN in ${LCOARSEN}; do
 
-    CMD="${EXE} -d ${LDATE0} -m ${FNMM} -i ${FSI3IN} -k 0 -f ${FFSM} -C ${ICOARSEN}"
-    echo
-    echo " *** About to launch:"; echo "     ${CMD}"; echo
-    ijob=$((ijob+1))
-    ${CMD} 1>"./logs/out_${flog}.out" 2>"./logs/err_${flog}.err" &
-    echo
-    if [ $((ijob%NJPAR)) -eq 0 ]; then
-        echo "Waiting! (ijob = ${ijob})...."
-        wait; echo; echo
-    fi
-    
+        str="${NDATE0}_crsn{ICOARSEN}km"
+
+        flog="seeding_${str}"
+
+        fout="./nc/sitrack_seeding_nemoTsi3_${NDATE0}_${ICOARSEN}km.nc"
+
+        if [ ! -f ${fout} ]; then
+
+            CMD="${EXE} -d ${LDATE0} -m ${FNMM} -i ${FSI3IN} -k 0 -f ${FFSM} -C ${ICOARSEN}"
+            echo
+            echo " *** About to launch:"; echo "     ${CMD}"; echo
+            ijob=$((ijob+1))
+            ${CMD} 1>"./logs/out_${flog}.out" 2>"./logs/err_${flog}.err" &
+            echo
+            if [ $((ijob%NJPAR)) -eq 0 ]; then
+                echo "Waiting! (ijob = ${ijob})...."
+                wait; echo; echo
+            fi
+
+        fi
+    done
 done
