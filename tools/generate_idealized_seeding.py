@@ -262,7 +262,11 @@ if __name__ == '__main__':
 
     
     makedirs( './nc', exist_ok=True )
-    foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+cextra+'.nc'
+
+    cdate = mjt.epoch2clock(zTime[0], precision='D')
+    cdate = str.replace(cdate, '-', '')
+    
+    foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.nc'
     
     print('\n *** Saving seeding file for date =',mjt.epoch2clock(zTime[0]))
     
@@ -272,13 +276,13 @@ if __name__ == '__main__':
     if iplot>0:
 
         makedirs( './figs', exist_ok=True )
-        ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+cextra+'.png'
+        ffig = './figs/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.png'
 
 
         cextra = str.replace(cextra, '_', ' ')
         
         mjt.ShowBuoysMap( zTime[0], XseedGC[0,:,1], XseedGC[0,:,0],
-                          cfig=ffig, cnmfig=None, ms=1, ralpha=0.5, lShowDate=True,
-                          zoom=3., title='Seeding initialization'+cextra )
+                          cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
+                          zoom=1., title='Seeding initialization'+cextra )
     
 

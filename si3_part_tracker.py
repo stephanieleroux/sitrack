@@ -46,10 +46,11 @@ def __argument_parsing__():
     parser = ap.ArgumentParser(description='SITRACK ICE PARTICULES TRACKER')
     rqrdNam = parser.add_argument_group('required arguments')
     rqrdNam.add_argument('-i', '--fsi3', required=True,  help='output file of SI3 containing ice velocities ans co')
-    rqrdNam.add_argument('-m', '--fmmm',  required=True, help='model `mesh_mask` file of NEMO config used in SI3 run')
+    rqrdNam.add_argument('-m', '--fmmm', required=True, help='model `mesh_mask` file of NEMO config used in SI3 run')
     rqrdNam.add_argument('-s', '--fsdg', required=True,  help='seeding file')
     #
-    parser.add_argument('-k', '--krec' , type=int, default=0,      help='record of seeding file to use to seed from')
+    parser.add_argument('-k', '--krec' , type=int, default=0, help='record of seeding file to use to seed from')
+    parser.add_argument('-e', '--dend' ,  default=None,       help='date at which to stop')
     #parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on model domain) to control seeding region')
     #parser.add_argument('-t', '--styp' , default='nemoTsi3',  help='seeding type ')
     #
@@ -60,11 +61,13 @@ def __argument_parsing__():
     print(' *** SI3 file to get ice velocities from => ', args.fsi3)
     print(' *** SI3 `mesh_mask` metrics file        => ', args.fmmm)
     print(' *** Seeding file and record to use      => ', args.fsdg, args.krec )
+    if args.dend:
+        print(' *** Overidding date at which to stop =>', args.dend )
     #
     #if args.fmsk:
     #    print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
     #
-    return args.fsi3, args.fmmm, args.fsdg, args.krec
+    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend
 
 
 
@@ -78,14 +81,17 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, jrec = __argument_parsing__()
+    cf_uv, cf_mm, fNCseed, jrec, cdate_stop = __argument_parsing__()
 
     print('cf_uv =',cf_uv)
     print('cf_mm =',cf_mm)
     print('fNCseed =',fNCseed)
     print('jrec =',jrec)
+    ldateStop=False
+    if cdate_stop:
+        ldateStop=True
+        print('cdate_stop =',cdate_stop)
     print('\n')
-    
     
     # Are we in a idealized seeding or not:
     fncSsplt = split('_',path.basename(fNCseed))
@@ -119,11 +125,18 @@ if __name__ == '__main__':
     
     # What records of model data can we use, based on time info from 2 input files above:
     date_stop = None
-    if idateSeedB - idateSeedA >= 3600.:
+    if ldateStop:
+        # A stop date explicitely asked at command line:
+        print('LOLO: cdate_stop =',cdate_stop)
+        date_stop = mjt.clock2epoch( cdate_stop, precision='D', cfrmt='basic' )
+        #
+    elif idateSeedB - idateSeedA >= 3600.:
         # => there are more than 1 record in the file we use for seeding!!!
         #    ==> which means we are likely to do replicate the exact same thing using the model data
         #    ==> so we stop at `idateSeedB` !!!
         date_stop = idateSeedB
+    
+        
     #
     Nt, kstrt, kstop = sit.GetTimeSpan( rdt, ztime_model, idateSeedA, idateModA, idateModB , iStop=date_stop )
     #
