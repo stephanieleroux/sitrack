@@ -25,14 +25,18 @@ NJPAR=4 ; # number of jobs we can launch in //
 
 FREQ_AN_DAYS=3 ; # frequency in days of the deformation analysis...
 
+xtra_sfx=""
 
 host=`hostname | cut -d '.' -f2`
 case ${host} in
     "merlat")
+        #/MEDIA/data/NANUK4/BBM00/NANUK4_ICE-BBM00_1h_19970101_19970331_icemod_LIGHT480.nc4
         export DATA_DIR="/MEDIA/data"
         #export iHSS=6 ; RESKM=73
-        export iHSS=4 ; RESKM=49
+        #export iHSS=4 ; RESKM=49
+        export iHSS=10 ; RESKM=120
         Ndays=6
+        xtra_sfx="_LIGHT480"
         #
         ;;
     "mcp-oceannext-01")
@@ -59,7 +63,7 @@ case ${host} in
 esac
 
 
-FSI3IN="${NEMO_CONF}_ICE-${NEMO_EXP}_1h_${DATE1}_${DATE2}_icemod.nc4"
+FSI3IN="${NEMO_CONF}_ICE-${NEMO_EXP}_1h_${DATE1}_${DATE2}_icemod${xtra_sfx}.nc4"
 
 export FSI3IN="${DATA_DIR}/${NEMO_CONF}/${NEMO_CONF}_ICE-${NEMO_EXP}-S/${SBDIR}${cxtra}/${FSI3IN}"
 
