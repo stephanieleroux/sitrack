@@ -20,17 +20,11 @@ iplot=1
 
 seeding_type='debug' ; # By default, ha
 
-iHSS=15 ; # horizontal sub-sampling for NEMO points initialization...
-
 ldo_coastal_clean = False
 MinDistFromLand  = 200 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
 l_CentralArctic = False ; # only keep points of the central Arctic
-
-
-
-
 
 
 
@@ -51,6 +45,7 @@ def __argument_parsing__():
     parser.add_argument('-k', '--krec' , type=int, default=0,   help='record of seeding file to use to seed from (only if use SI3 file!)')
     parser.add_argument('-S', '--ihss' , type=int, default=1,   help='horizontal subsampling factor to apply')
     parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on SI3 model domain) to control seeding region')
+    parser.add_argument('-C', '--crsn' , type=int, default=0,   help='apply this coarsening in km')
     args = parser.parse_args()
 
     if args.fsi3 and not args.fmmm:
@@ -69,8 +64,10 @@ def __argument_parsing__():
     print(' *** Horizontal subsampling factor to apply => ', args.ihss)
     if args.fmsk:
         print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
+    if args.crsn>=1:
+        print(' *** Will apply a coarsening on cloud of points, at scale => ', args.crsn,'km' )
     #
-    return args.dat0, args.fsi3, args.nsic, args.krec, args.fmmm, args.ihss, args.fmsk
+    return args.dat0, args.fsi3, args.nsic, args.krec, args.fmmm, args.ihss, args.fmsk, args.crsn
 
 
 
@@ -88,7 +85,7 @@ if __name__ == '__main__':
     lnemoMM  = False
     lnemoSI3 = False
         
-    cdate0, cf_si3, cv_sic, krec, cf_mm, iHSS, cf_force_msk = __argument_parsing__()
+    cdate0, cf_si3, cv_sic, krec, cf_mm, iHSS, cf_force_msk, icrsn = __argument_parsing__()
 
     if cf_mm:
         lnemoMM  = True
@@ -100,6 +97,9 @@ if __name__ == '__main__':
     lForceSeedRegion = False
     if cf_force_msk:
         lForceSeedRegion = True
+
+    lCoarsen = ( icrsn>=1 )
+        
 
     
     print('\n *** Input SUMMARY:')
@@ -113,6 +113,9 @@ if __name__ == '__main__':
     print('iHSS =',iHSS)
     if lForceSeedRegion:
         print('cf_force_msk =',cf_force_msk)
+    if lCoarsen:
+        print('coarsening:',icrsn,'km')
+
     if iHSS<1 or iHSS>20:
         print('ERROR: chosen horizontal subsampling makes no sense iHSS=',iHSS)
         exit(0)        
@@ -147,19 +150,19 @@ if __name__ == '__main__':
 
 
     if seeding_type in ['nemoTmm','nemoTsi3']:
-        XseedG = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=FSmask )
+        XseedGC = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=FSmask )
         #
     elif seeding_type=='debug':
-        if idebug in [0,1,2]: XseedG = sit.debugSeeding()
-        if idebug in [3]:     XseedG = sit.debugSeeding1()
+        if idebug in [0,1,2]: XseedGC = sit.debugSeeding()
+        if idebug in [3]:     XseedGC = sit.debugSeeding1()
         #
     else:
          print(' ERROR: `seeding_type` =',seeding_type,' is unknown!')
          exit(0)
          
-    print('\n * Shape of XseedG =',np.shape(XseedG))
+    print('\n * Shape of XseedGC =',np.shape(XseedGC))
     
-    (nP,_) = np.shape(XseedG)
+    (nP,_) = np.shape(XseedGC)
 
 
 
@@ -173,39 +176,66 @@ if __name__ == '__main__':
     print( zTime )
 
     if ldo_coastal_clean:
-        mask = mjt.MaskCoastal( XseedG, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
+        mask = mjt.MaskCoastal( XseedGC, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
         print(' * Need to remove '+str(nP-np.sum(mask))+' points because too close to land! ('+str(MinDistFromLand)+'km)')
         nP = np.sum(mask) ; # new size once buoys too close to land removed...
         (idxKeep,) = np.where(mask==1)
         zIDs = zIDs[idxKeep]
-        XseedG =  np.array( [ np.squeeze(XseedG[idxKeep,0]), np.squeeze(XseedG[idxKeep,1]) ] ).T
+        XseedGC =  np.array( [ np.squeeze(XseedGC[idxKeep,0]), np.squeeze(XseedGC[idxKeep,1]) ] ).T
         del idxKeep
         
     
     if l_CentralArctic:
-        #zYXkm = mjt.Geo2CartNPSkm1D( XseedG, lat0=50., lon0=180. )        
-        #zdistP = np.sqrt( zYXkm[:,0]*zYXkm[:,0] + zYXkm[:,1]*zYXkm[:,1] )
-        #print(zdistP[::10])
-        #(idxKeep,) = np.where(zdistP<1000.)
-        #(idxKeep,) = np.where( (XseedG[:,0]>82.) | ((np.mod(XseedG[:,1],360.)>120.) & (np.mod(XseedG[:,1],360.)<280.)) )
-        (idxKeep,) = np.where( (XseedG[:,0]>70.) & (np.mod(XseedG[:,1],360.)>120.) & (np.mod(XseedG[:,1],360.)<280.) | (XseedG[:,0]>82.) )
+        (idxKeep,) = np.where( (XseedGC[:,0]>70.) & (np.mod(XseedGC[:,1],360.)>120.) & (np.mod(XseedGC[:,1],360.)<280.) | (XseedGC[:,0]>82.) )
         nP = len(idxKeep)
         zIDs = zIDs[idxKeep]
-        XseedG =  np.array( [ np.squeeze(XseedG[idxKeep,0]), np.squeeze(XseedG[idxKeep,1]) ] ).T
+        XseedGC =  np.array( [ np.squeeze(XseedGC[idxKeep,0]), np.squeeze(XseedGC[idxKeep,1]) ] ).T
         del idxKeep
 
+
+    # Convert geoo coordinates to projected polar proj:
+    XseedYX = sit.Geo2CartNPSkm1D( XseedGC ) ; # same for seeded initial positions, XseedGC->XseedYX
+
+    
+    
+    if lCoarsen:
+        # both XseedGC and XseedYX are in C-array-indexing...
+        # Coarsening:
+        rd_ss = float(icrsn)
+        print('\n *** Applying spatial sub-sampling with radius: '+str(round(rd_ss,2))+'km')
+        nPss, zYXss, idxKeep = mjt.SubSampCloud( rd_ss, XseedYX[:,:], convArray='C' )
+        zGCss = XseedGC[idxKeep,:].copy()
+        print('    ==> nP, nPss =',nP, nPss )
+        del XseedGC, XseedYX
+        #
+        nP = nPss
+        XseedGC = zGCss.copy()
+        XseedYX = zYXss.copy()
+        zIDs = zIDs[idxKeep]
+        del zGCss, zYXss, idxKeep
         
-    XseedC = sit.Geo2CartNPSkm1D( XseedG ) ; # same for seeded initial positions, XseedG->XseedC
+    
         
-    XseedG = np.reshape( XseedG, (1,nP,2) )
-    XseedC = np.reshape( XseedC, (1,nP,2) )
+    XseedGC = np.reshape( XseedGC, (1,nP,2) )
+    XseedYX = np.reshape( XseedYX, (1,nP,2) )
+    
+
+    print('shape XseedYX =',np.shape(XseedYX))
+    print('shape XseedGC =',np.shape(XseedGC))
+
+
+    print('idx 0 =',XseedGC[0,::20,0])
+    print('idx 1 =',XseedGC[0,::20,1])
+
+
+
     
     makedirs( './nc', exist_ok=True )
     foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'_HSS'+str(iHSS)+'.nc'
     
     print('\n *** Saving seeding file for date =',mjt.epoch2clock(zTime[0]))
     
-    kk = sit.ncSaveCloudBuoys( foutnc, zTime, zIDs, XseedC[:,:,0], XseedC[:,:,1], XseedG[:,:,0], XseedG[:,:,1],
+    kk = sit.ncSaveCloudBuoys( foutnc, zTime, zIDs, XseedYX[:,:,0], XseedYX[:,:,1], XseedGC[:,:,0], XseedGC[:,:,1],
                                corigin='idealized_seeding' )
 
     if iplot>0:
@@ -214,9 +244,8 @@ if __name__ == '__main__':
         ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'.png'
 
         
-        mjt.ShowBuoysMap( 0, XseedG[0,:,1], XseedG[0,:,0],
+        mjt.ShowBuoysMap( 0, XseedGC[0,:,1], XseedGC[0,:,0],
                           cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
                           zoom=1., title='Seeding initialization' )
-        # pvIDs=zIDs,
     
 
