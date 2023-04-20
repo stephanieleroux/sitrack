@@ -259,7 +259,7 @@ if __name__ == '__main__':
         ffig = './figs/sitrack_seeding_'+seeding_type+'_'+mjt.epoch2clock(zTime[0], precision='D')+'.png'
 
         
-        mjt.ShowBuoysMap( 0, XseedGC[0,:,1], XseedGC[0,:,0],
+        mjt.ShowBuoysMap( zTime[0], XseedGC[0,:,1], XseedGC[0,:,0],
                           cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
                           zoom=1., title='Seeding initialization' )
     
