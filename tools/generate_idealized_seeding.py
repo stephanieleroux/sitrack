@@ -26,6 +26,8 @@ fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
 l_CentralArctic = False ; # only keep points of the central Arctic
 
+lAddFpoints = False
+#lAddFpoints = False
 
 
 def __argument_parsing__():
@@ -126,8 +128,11 @@ if __name__ == '__main__':
 
             
     if lnemoMM or lnemoSI3:
-        # Getting model grid metrics and friends:
-        imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = sit.GetModelGrid( cf_mm )
+        # Getting model grid metrics and friends:        
+        if lAddFpoints:
+            imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM, imaskF, xlatF, xlonF = sit.GetModelGrid( cf_mm, alsoF=True )
+        else:
+            imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM                       = sit.GetModelGrid( cf_mm )
 
     if lnemoSI3:
         xIC = sit.GetModelSeaIceConc( cf_si3, name=cv_sic, krec=krec, expected_shape=np.shape(imaskt) )
@@ -150,7 +155,10 @@ if __name__ == '__main__':
 
 
     if seeding_type in ['nemoTmm','nemoTsi3']:
-        XseedGC = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=FSmask )
+        if lAddFpoints:
+            XseedGC = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=FSmask, platF=xlatF, plonF=xlonF )
+        else:
+            XseedGC = sit.nemoSeed( imaskt, xlatT, xlonT, xIC, khss=iHSS, fmsk_rstrct=FSmask )
         #
     elif seeding_type=='debug':
         if idebug in [0,1,2]: XseedGC = sit.debugSeeding()
@@ -204,7 +212,9 @@ if __name__ == '__main__':
         
     if lCoarsen:
         # Coarsening:        
-        if   icrsn==20:
+        if   icrsn==10:
+            rd_ss =  8
+        elif icrsn==20:
             rd_ss = 15
         elif icrsn==40:
             rd_ss = 35
@@ -268,7 +278,7 @@ if __name__ == '__main__':
         cextra = str.replace(cextra, '_', ' ')
         
         mjt.ShowBuoysMap( zTime[0], XseedGC[0,:,1], XseedGC[0,:,0],
-                          cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
-                          zoom=1., title='Seeding initialization'+cextra )
+                          cfig=ffig, cnmfig=None, ms=1, ralpha=0.5, lShowDate=True,
+                          zoom=3., title='Seeding initialization'+cextra )
     
 

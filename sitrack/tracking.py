@@ -327,12 +327,26 @@ def debugSeeding1():
     return zLatLon
 
 
-def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=[] ):
+def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=[],
+              platF=[], plonF=[] ):
 
+    lAddF = ( np.shape(platF)==np.shape(pmskT) and np.shape(plonF)==np.shape(pmskT) )
+
+    #if lAddF:
+    #    # we create our custom F mask (1 where all 4 suround T points have 1!)
+    #    pmskF = np.zeros(np.shape(pmskT), dtype='i1')
+    #    pmskF[1:-1,1:-1] = ( pmskT[2:,1:-1] + pmskT[1:-1,2:] + pmskT[:-2,1:-1] + pmskT[1:-1,:-2] ) / 4
+    
     zmsk = pmskT[::khss,::khss]
     zlat = platT[::khss,::khss]
     zlon = plonT[::khss,::khss]
 
+    if lAddF:
+        #zmskF = pmskF[::khss,::khss]
+        zlatF = platF[::khss,::khss]
+        zlonF = plonF[::khss,::khss]
+        #del pmskF
+        
     (Nj,Ni) = np.shape(zmsk)
     ztmp = np.zeros((Nj,Ni))
 
@@ -343,30 +357,52 @@ def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=[] ):
             print('ERROR [nemoSeed()]: restricted area mask does not agree in shape with model output!'); exit(0)
     
     msk_T = np.zeros((Nj,Ni), dtype='i1')
-
     msk_T[:,:] = zmsk[:,:]
-
+    #if lAddF:
+    #    msk_F = np.zeros((Nj,Ni), dtype='i1')
+    #    msk_F[:,:] = zmskF[:,:]
 
     if lfmsk_rstrct:
         msk_T[:,:] = msk_T[:,:]*maskR[:,:]
-
+        #if lAddF:
+        #    msk_F[:,:] = msk_F[:,:]*maskR[:,:]
+            
     # Only north of ...
     msk_T[np.where(zlat < 55.)] = 0
+    #if lAddF:
+    #    msk_F[np.where(zlat < 55.)] = 0
         
     # Only over a decent concentration of ice:
     ztmp[:,:] = pIC[::khss,::khss]
     msk_T[np.where(ztmp < 0.9)] = 0
-
+    #if lAddF:
+    #    msk_F[np.where(ztmp < 0.9)] = 0
+            
     (idy_keep, idx_keep) = np.where( msk_T==1 )
     NbIPt = len(idy_keep)
     zLatLon = np.zeros((NbIPt,2))
-    
+
     for jp in range(NbIPt):
         jj = idy_keep[jp]
         ji = idx_keep[jp]
         zLatLon[jp,:] = [ zlat[jj,ji],zlon[jj,ji] ]
         
-    del zmsk,zlat,zlon
+    
+    if lAddF:
+        # we create our custom F mask (1 where all 4 suround T points have 1!)
+        msk_F = np.zeros(np.shape(msk_T), dtype='i1')
+        msk_F[1:-1,1:-1] = ( msk_T[2:,1:-1] + msk_T[1:-1,2:] + msk_T[:-2,1:-1] + msk_T[1:-1,:-2] ) / 4
+        #
+        (idy_keepF, idx_keepF) = np.where( msk_F==1 )
+        NbIPtF = len(idy_keepF)
+        zLatLonF = np.zeros((NbIPtF,2))
+
+        for jp in range(NbIPtF):
+            jj = idy_keepF[jp]
+            ji = idx_keepF[jp]
+            zLatLonF[jp,:] = [ zlatF[jj,ji],zlonF[jj,ji] ]
+        print('LOLO: [nemoSeed()]: adding ',NbIPtF,'F-points to the',NbIPt,'T-points!')
+        zLatLon = np.concatenate( [ zLatLon, zLatLonF ])
         
     return zLatLon
 

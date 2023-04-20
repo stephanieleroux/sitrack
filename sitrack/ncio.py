@@ -17,7 +17,7 @@ list_required_var_RGPS = [ 'index', 'x', 'y', 'lon', 'lat', 'time', 'idstream', 
 FillValue = -9999.
 
 
-def GetModelGrid( fNCmeshmask ):
+def GetModelGrid( fNCmeshmask, alsoF=False ):
 
     chck4f( fNCmeshmask)
 
@@ -30,6 +30,8 @@ def GetModelGrid( fNCmeshmask ):
         zlatT  = id_mm.variables['gphit'][0,:,:]
         ze1T   = id_mm.variables['e1t'][0,:,:] / 1000. ; # km
         ze2T   = id_mm.variables['e2t'][0,:,:] / 1000. ; # km
+        if alsoF:
+            kmaskf = id_mm.variables['fmask'][0,0,:,:]
 
     (nj,ni) = np.shape(kmaskt)
 
@@ -47,16 +49,18 @@ def GetModelGrid( fNCmeshmask ):
     zlonF = np.mod( zlonF, 360. )
     zYt[:,:], zXt[:,:] = ConvertGeo2CartesianNPSkm(zlatT, zlonT)
     zYf[:,:], zXf[:,:] = ConvertGeo2CartesianNPSkm(zlatF, zlonF)
-    del zlatF, zlonF
 
     # Local resolution in km (for ):
     zResKM = np.zeros((nj,ni))
     zResKM[:,:] = np.sqrt( ze1T*ze1T + ze2T*ze2T )
     del ze1T, ze2T
 
-    return kmaskt, zlatT, zlonT, zYt, zXt, zYf, zXf, zResKM
+    if alsoF:
+        return kmaskt, zlatT, zlonT, zYt, zXt, zYf, zXf, zResKM, kmaskf, zlatF, zlonF
+    else:
+        return kmaskt, zlatT, zlonT, zYt, zXt, zYf, zXf, zResKM
 
-#X
+
 def GetModelUVGrid( fNCmeshmask ):
 
     chck4f( fNCmeshmask)
