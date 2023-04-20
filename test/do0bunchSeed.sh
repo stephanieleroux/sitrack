@@ -30,17 +30,17 @@ for date in ${LIST_DATES}; do
     echo $NDATE0
     echo
 
-    for ICOARSEN in ${LCOARSEN}; do
+    for RESKM in ${LCOARSEN}; do
 
-        str="${NDATE0}_crsn{ICOARSEN}km"
+        str="${NDATE0}_${RESKM}km"
 
         flog="seeding_${str}"
 
-        fout="./nc/sitrack_seeding_nemoTsi3_${NDATE0}_${ICOARSEN}km.nc"
+        fout="./nc/sitrack_seeding_nemoTsi3_${NDATE0}_${RESKM}km.nc"
 
         if [ ! -f ${fout} ]; then
 
-            CMD="${EXE} -d ${LDATE0} -m ${FNMM} -i ${FSI3IN} -k 0 -f ${FFSM} -C ${ICOARSEN}"
+            CMD="${EXE} -d ${LDATE0} -m ${FNMM} -i ${FSI3IN} -k 0 -f ${FFSM} -C ${RESKM}"
             echo
             echo " *** About to launch:"; echo "     ${CMD}"; echo
             ijob=$((ijob+1))

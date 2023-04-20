@@ -15,19 +15,23 @@ from re import split
 import mojito   as mjt
 import sitrack  as sit
 
+from random import random
+
+
 idebug=0
 iplot=1
 
+lRandomize = True
+
 seeding_type='debug' ; # By default, ha
 
-ldo_coastal_clean = False
-MinDistFromLand  = 200 ; # how far from the nearest coast should our buoys be? [km]
+ldo_coastal_clean = True
+MinDistFromLand  = 100 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
 l_CentralArctic = False ; # only keep points of the central Arctic
 
 lAddFpoints = False
-#lAddFpoints = False
 
 
 def __argument_parsing__():
@@ -77,6 +81,20 @@ def __argument_parsing__():
 
 if __name__ == '__main__':
 
+    #xrand = []
+    #for i in range(2000):
+    #    rr = 2.*random()-1.
+    #    xrand.append(rr)
+    #    print(rr)
+
+    #xrand = np.array(xrand)
+    #print('* mean =', np.mean(xrand))
+    #print('* max =', np.max(xrand))
+    #print('* min =', np.min(xrand))
+    #exit(0)
+
+
+    
     print('')
     if ldo_coastal_clean:
         cdata_dir = environ.get('DATA_DIR')
@@ -126,6 +144,45 @@ if __name__ == '__main__':
             print('ERROR: chosen record to read is < 0!',krec); exit(0)
     print('')
 
+
+
+    zAmpRand = 0.1 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
+            
+    if lCoarsen:
+        # Coarsening:        
+        if   icrsn==10:
+            lAddFpoints=True
+            rd_ss =  8
+            zAmpRand = 0.05 ; # degrees
+        elif icrsn==20:
+            rd_ss = 16
+        elif icrsn==40:
+            rd_ss = 35
+        elif icrsn==80:
+            rd_ss = 73
+        elif icrsn==160:
+            rd_ss = 145
+        elif icrsn==320:
+            rd_ss = 295
+            zAmpRand = 0.2 ; # degrees
+            MinDistFromLand  = 150 ; # how far from the nearest coast should our buoys be? [km]
+        elif icrsn==640:
+            rd_ss = 620
+            zAmpRand = 0.4 ; # degrees
+            MinDistFromLand  = 200 ; # how far from the nearest coast should our buoys be? [km]
+        else:
+            print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
+            exit(0)
+
+
+
+
+
+
+
+
+
+    
             
     if lnemoMM or lnemoSI3:
         # Getting model grid metrics and friends:        
@@ -144,11 +201,13 @@ if __name__ == '__main__':
     FSmask = None
     if lForceSeedRegion:
         FSmask = sit.GetSeedMask( cf_force_msk, mvar='tmask' )
-        print(FSmask[::50,::20])                                                                                                                                                               
+        print(FSmask[::50,::20])
         if np.shape(FSmask) != np.shape(imaskt):
             print('ERROR: `shape(FSmask) != shape(imaskt)`'); exit(0)
 
-    
+
+
+            
     ############################
     # Initialization / Seeding #
     ############################
@@ -183,6 +242,24 @@ if __name__ == '__main__':
     print( zIDs  )
     print( zTime )
 
+
+    if lRandomize:        
+        for jP in range(nP):
+            zr1 = 2.*random()-1. ; # random number between -1 and 1
+            zr2 = 2.*random()-1. ; # random number between -1 and 1
+            [zlat,zlon] = XseedGC[jP,:]
+            #zlat_b = zlat
+            #
+            zlat = zlat + zAmpRand*zr1
+            zlon = np.mod( zlon + zAmpRand*zr2, 360. )
+            dl90 = zlat - 90.
+            if dl90 > 0.:
+                #zlat = zlat_b
+                zlat = 90. - dl90            
+                zlon = np.mod( zlon + 180., 360. )
+            XseedGC[jP,:] = [zlat,zlon]
+
+    
     if ldo_coastal_clean:
         mask = mjt.MaskCoastal( XseedGC, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
         print(' * Need to remove '+str(nP-np.sum(mask))+' points because too close to land! ('+str(MinDistFromLand)+'km)')
@@ -211,25 +288,6 @@ if __name__ == '__main__':
         cextra = '_HSS'+str(iHSS)
         
     if lCoarsen:
-        # Coarsening:        
-        if   icrsn==10:
-            rd_ss =  8
-        elif icrsn==20:
-            rd_ss = 15
-        elif icrsn==40:
-            rd_ss = 35
-        elif icrsn==80:
-            rd_ss = 73
-        elif icrsn==160:
-            rd_ss = 145
-        elif icrsn==320:
-            rd_ss = 295
-        elif icrsn==640:
-            rd_ss = 620
-        else:
-            print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
-            exit(0)
-
         cextra='_'+str(icrsn)+'km'
         
         #MIND: both XseedGC and XseedYX are in C-array-indexing...

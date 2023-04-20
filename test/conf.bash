@@ -34,7 +34,9 @@ case ${host} in
     "merlat")
         #/MEDIA/data/NANUK4/BBM00/NANUK4_ICE-BBM00_1h_19970101_19970331_icemod_LIGHT480.nc4
         export DATA_DIR="/MEDIA/data"
-        export iHSS=1 ; RESKM=12 ; LCOARSEN="10 160"
+        export iHSS=1 ; RESKM=12
+        #LCOARSEN="20 40 80 160 360 640"
+        LCOARSEN="80"
         #export iHSS=6 ; RESKM=73
         #export iHSS=4 ; RESKM=49
         #export iHSS=10 ; RESKM=120
