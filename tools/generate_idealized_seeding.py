@@ -155,7 +155,7 @@ if __name__ == '__main__':
             rd_ss =  7.5
             zAmpRand = 0.05 ; # degrees
         elif icrsn==20:
-            rd_ss = 14.5
+            rd_ss = 14.6 ; # real shit! 
             zAmpRand = 0.05 ; # degrees
         elif icrsn==40:
             rd_ss = 34.5 ; # real shit!
