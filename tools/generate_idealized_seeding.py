@@ -152,7 +152,7 @@ if __name__ == '__main__':
         # Coarsening:        
         if   icrsn==10:
             lAddFpoints=True
-            rd_ss =  8
+            rd_ss =  7.5
             zAmpRand = 0.05 ; # degrees
         elif icrsn==20:
             rd_ss = 16
@@ -205,9 +205,7 @@ if __name__ == '__main__':
         if np.shape(FSmask) != np.shape(imaskt):
             print('ERROR: `shape(FSmask) != shape(imaskt)`'); exit(0)
 
-
-
-            
+    
     ############################
     # Initialization / Seeding #
     ############################
@@ -332,9 +330,9 @@ if __name__ == '__main__':
                                corigin='idealized_seeding' )
 
     if iplot>0:
-
-        makedirs( './figs', exist_ok=True )
-        ffig = './figs/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.png'
+        fdir = './figs/coarsen'
+        makedirs( fdir, exist_ok=True )
+        ffig = fdir+'/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.png'
 
 
         cextra = str.replace(cextra, '_', ' ')
