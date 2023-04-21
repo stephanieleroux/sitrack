@@ -164,11 +164,11 @@ if __name__ == '__main__':
         elif icrsn==160:
             rd_ss = 156. ; # real shit!
         elif icrsn==320:
-            rd_ss = 295
+            rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.2 ; # degrees
             MinDistFromLand  = 150 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
-            rd_ss = 620
+            rd_ss = 636. ; # real shit!
             zAmpRand = 0.4 ; # degrees
             MinDistFromLand  = 200 ; # how far from the nearest coast should our buoys be? [km]
         else:
