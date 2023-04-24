@@ -25,7 +25,7 @@ lRandomize = True
 
 seeding_type='debug' ; # By default, ha
 
-ldo_coastal_clean = True
+ldo_coastal_clean = False
 MinDistFromLand  = 100 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
@@ -96,11 +96,6 @@ if __name__ == '__main__':
 
     
     print('')
-    if ldo_coastal_clean:
-        cdata_dir = environ.get('DATA_DIR')
-        if cdata_dir==None:
-            print('\n ERROR: Set the `DATA_DIR` environement variable!\n'); exit(0)
-        fdist2coast_nc = cdata_dir+'/data/dist2coast/dist2coast_4deg_North.nc'
 
     lnemoMM  = False
     lnemoSI3 = False
@@ -146,7 +141,7 @@ if __name__ == '__main__':
 
 
 
-    zAmpRand = 0.1 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
+    zAmpRand = 0.01 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
             
     if lCoarsen:
         # Coarsening:        
@@ -169,12 +164,14 @@ if __name__ == '__main__':
             rd_ss = 156. ; # real shit!
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
-            zAmpRand = 0.2 ; # degrees
-            MinDistFromLand  = 150 ; # how far from the nearest coast should our buoys be? [km]
+            #zAmpRand = 0.2 ; # degrees
+            zAmpRand = 0.3 ; # degrees
+            ldo_coastal_clean = True; distMax=400 ; distMin = 200 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.4 ; # degrees
-            MinDistFromLand  = 200 ; # how far from the nearest coast should our buoys be? [km]
+            #zAmpRand = 2. ; # degrees
+            ldo_coastal_clean = True; MinDistFromLand  = 400 ; # how far from the nearest coast should our buoys be? [km]
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
             exit(0)
@@ -242,28 +239,46 @@ if __name__ == '__main__':
     zTime = np.array( [ mjt.clock2epoch(cdate0) ], dtype='i4' )    
     print('\n * Requested initialization date =', mjt.epoch2clock(zTime[0]))
     
-    print( zIDs  )
-    print( zTime )
+    cdate = mjt.epoch2clock(zTime[0], precision='D')
+    cdate = str.replace(cdate, '-', '')
 
 
-    if lRandomize:        
+    
+
+    if lRandomize:
+        # Working with stereo projection rather than geographic coordinates to avoid North-Pole singularity:
+        zYX = sit.Geo2CartNPSkm1D( XseedGC )
+        #
         for jP in range(nP):
             zr1 = 2.*random()-1. ; # random number between -1 and 1
             zr2 = 2.*random()-1. ; # random number between -1 and 1
-            [zlat,zlon] = XseedGC[jP,:]
-            #zlat_b = zlat
             #
-            zlat = zlat + zAmpRand*zr1
-            zlon = np.mod( zlon + zAmpRand*zr2, 360. )
-            dl90 = zlat - 90.
-            if dl90 > 0.:
-                #zlat = zlat_b
-                zlat = 90. - dl90            
-                zlon = np.mod( zlon + 180., 360. )
-            XseedGC[jP,:] = [zlat,zlon]
+            [zy,zx] = zYX[jP,:]
+            #
+            zy = zy + zAmpRand*110.*zr1 ; # because 1 degree ~ 110 km...
+            zx = zx + zAmpRand*110.*zr2
+            zYX[jP,:] = [zy,zx]
+            #
+        XseedGC[:,:] = sit.CartNPSkm2Geo1D( zYX )
+        del zYX
 
-    
+
+        
     if ldo_coastal_clean:
+        #
+        cdata_dir = environ.get('DATA_DIR')
+        if cdata_dir==None:
+            print('\n ERROR: Set the `DATA_DIR` environement variable!\n'); exit(0)
+        fdist2coast_nc = cdata_dir+'/data/dist2coast/dist2coast_4deg_North.nc'
+        #        
+        if lRandomize:
+            zrc = 2.*random()-1. ; # random number between -1 and 1
+            MinDistFromLand =    0.5*(distMin + distMax) + zrc*0.5*(distMax - distMin)
+            print('LOLO: MinDistFromLand randomized =',MinDistFromLand)
+        else:
+            MinDistFromLand = 0.5*(distMin + distMax)
+
+            
         mask = mjt.MaskCoastal( XseedGC, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
         print(' * Need to remove '+str(nP-np.sum(mask))+' points because too close to land! ('+str(MinDistFromLand)+'km)')
         nP = np.sum(mask) ; # new size once buoys too close to land removed...
@@ -292,7 +307,16 @@ if __name__ == '__main__':
         
     if lCoarsen:
         cextra='_'+str(icrsn)+'km'
-        
+
+        if iplot>0:
+            fdir = './figs/coarsen'
+            makedirs( fdir, exist_ok=True )
+            ffig = fdir+'/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'_beforeCRSN'+'.png'
+            cextra = str.replace(cextra, '_', ' ')            
+            mjt.ShowBuoysMap( zTime[0], XseedGC[:,1], XseedGC[:,0],
+                              cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
+                              zoom=1., title='Seeding initialization'+cextra )
+            
         #MIND: both XseedGC and XseedYX are in C-array-indexing...
         print('\n *** Applying spatial sub-sampling with radius: '+str(round(rd_ss,2))+'km')
         nPss, zYXss, idxKeep = mjt.SubSampCloud( rd_ss, XseedYX[:,:], convArray='C' )
@@ -323,9 +347,6 @@ if __name__ == '__main__':
 
     
     makedirs( './nc', exist_ok=True )
-
-    cdate = mjt.epoch2clock(zTime[0], precision='D')
-    cdate = str.replace(cdate, '-', '')
     
     foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.nc'
     
