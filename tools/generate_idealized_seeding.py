@@ -165,7 +165,7 @@ if __name__ == '__main__':
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.5 ; # degrees
-            ldo_coastal_clean = True; distMax=400 ; distMin = 200 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean = True; distMax=350 ; distMin = 150 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.4 ; # degrees
@@ -311,10 +311,10 @@ if __name__ == '__main__':
             fdir = './figs/coarsen'
             makedirs( fdir, exist_ok=True )
             ffig = fdir+'/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'_beforeCRSN'+'.png'
-            cextra = str.replace(cextra, '_', ' ')            
+            cxtr = str.replace(cextra, '_', ' ')            
             mjt.ShowBuoysMap( zTime[0], XseedGC[:,1], XseedGC[:,0],
                               cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
-                              zoom=1., title='Seeding initialization'+cextra )
+                              zoom=1., title='Seeding initialization'+cxtr )
             
         #MIND: both XseedGC and XseedYX are in C-array-indexing...
         print('\n *** Applying spatial sub-sampling with radius: '+str(round(rd_ss,2))+'km')
