@@ -152,7 +152,11 @@ if __name__ == '__main__':
         # Coarsening:        
         if   icrsn==10:
             lAddFpoints=True
-            rd_ss =  7.5
+            #rd_ss =  7.5
+            #rd_ss =  7. ; # to test !!!! => 10.12-10.14
+            #rd_ss =  6.5 ; # to test !!!! => 10.08
+            #rd_ss =  6.2 ; # to test !!!! => 10.05
+            rd_ss =  6. ; # to test !!!! => 
             zAmpRand = 0.05 ; # degrees
         elif icrsn==20:
             rd_ss = 14.6 ; # real shit! 
