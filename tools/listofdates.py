@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
               
     cdateA, cdateB = argv[1], argv[2]    
-    dt_sec = int(argv[3])*24*3600
+    dt_sec = int( float(argv[3])*24.*3600. )
 
 
 
@@ -37,16 +37,14 @@ if __name__ == '__main__':
     idateB += dt_sec
             
     nT = int( (idateB+dt_sec - idateA)/dt_sec )
-
-    #print(nT); exit(0)
     
-    #idate = idateA
     for jT in range(nT):
         idate = idateA + jT*dt_sec
-        cdate = epoch2clock(idate)
+        cdate = epoch2clock(idate, precision='h' )
         
         cdout = str.replace(cdate, '-', '')
         cdout = str.replace(cdout, '_00:00:00', '')
+        #cdout = str.replace(cdout, '_00', '')
         
         print(cdout,end=' ')
     
