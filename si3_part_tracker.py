@@ -128,9 +128,12 @@ if __name__ == '__main__':
     date_stop = None
     if ldateStop:
         # A stop date explicitely asked at command line:
-        print('LOLO: cdate_stop =',cdate_stop)
-        date_stop = mjt.clock2epoch( cdate_stop, precision='D', cfrmt='basic' )
-        #
+        #print('LOLO: cdate_stop =',cdate_stop)
+        if len(cdate_stop)==19:
+            date_stop = mjt.clock2epoch( cdate_stop )
+        else:
+            date_stop = mjt.clock2epoch( cdate_stop, precision='D', cfrmt='basic' )
+        
     elif idateSeedB - idateSeedA >= 3600.:
         # => there are more than 1 record in the file we use for seeding!!!
         #    ==> which means we are likely to do replicate the exact same thing using the model data
