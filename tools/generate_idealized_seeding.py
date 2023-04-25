@@ -140,7 +140,8 @@ if __name__ == '__main__':
     print('')
 
 
-
+    distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
+    
     zAmpRand = 0.01 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
             
     if lCoarsen:
@@ -156,18 +157,19 @@ if __name__ == '__main__':
         elif icrsn==20:
             rd_ss = 14.6 ; # real shit! 
             zAmpRand = 0.05 ; # degrees
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]            
         elif icrsn==40:
             rd_ss = 34.5 ; # real shit!
             zAmpRand = 0.1 ; # degrees
-            ldo_coastal_clean=True; distMax=300 ; distMin = 120 ; # how far from the nearest coast should our buoys be? [km]            
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]            
         elif icrsn==80:
             rd_ss = 74.75 ; # real shit!
             zAmpRand = 0.2 ; # degrees
-            ldo_coastal_clean=True; distMax=300 ; distMin = 120 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==160:
             rd_ss = 156. ; # real shit!
             zAmpRand = 0.25 ; # degrees
-            ldo_coastal_clean=True; distMax=300 ; distMin = 120 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.5 ; # degrees
