@@ -171,7 +171,7 @@ if __name__ == '__main__':
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.5 ; # degrees
-            ldo_coastal_clean=True; distMax=350 ; distMin = 150 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.5 ; # degrees
