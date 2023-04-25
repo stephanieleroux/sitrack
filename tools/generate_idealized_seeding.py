@@ -154,6 +154,7 @@ if __name__ == '__main__':
             #rd_ss =  6.2 ; # to test !!!! => 10.05
             rd_ss =  6. ; # to test !!!! => fine...
             zAmpRand = 0.05 ; # degrees
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]            
         elif icrsn==20:
             rd_ss = 14.6 ; # real shit! 
             zAmpRand = 0.05 ; # degrees
