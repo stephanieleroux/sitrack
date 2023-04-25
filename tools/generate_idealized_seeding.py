@@ -243,10 +243,8 @@ if __name__ == '__main__':
     zTime = np.array( [ mjt.clock2epoch(cdate0) ], dtype='i4' )    
     print('\n * Requested initialization date =', mjt.epoch2clock(zTime[0]))
     
-    cdate = mjt.epoch2clock(zTime[0], precision='D')
+    cdate = mjt.epoch2clock(zTime[0], precision='h')
     cdate = str.replace(cdate, '-', '')
-
-
     
 
     if lRandomize:
