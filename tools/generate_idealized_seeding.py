@@ -313,7 +313,7 @@ if __name__ == '__main__':
     if lCoarsen:
         cextra='_'+str(icrsn)+'km'
 
-        if iplot>0:
+        if idebug>0 and iplot>0:
             fdir = './figs/coarsen'
             makedirs( fdir, exist_ok=True )
             ffig = fdir+'/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'_beforeCRSN'+'.png'
