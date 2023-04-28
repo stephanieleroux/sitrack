@@ -176,7 +176,7 @@ if __name__ == '__main__':
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            #ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
             exit(0)
@@ -347,8 +347,6 @@ if __name__ == '__main__':
 
     print('idx 0 =',XseedGC[0,::20,0])
     print('idx 1 =',XseedGC[0,::20,1])
-
-
 
     
     makedirs( './nc', exist_ok=True )
