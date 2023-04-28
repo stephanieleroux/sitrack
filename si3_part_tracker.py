@@ -10,7 +10,7 @@
 '''
 
 from sys import argv, exit
-from os import path, mkdir
+from os import path, mkdir, makedirs
 import numpy as np
 from re import split
 from netCDF4 import Dataset
