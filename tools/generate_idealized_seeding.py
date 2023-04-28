@@ -8,7 +8,7 @@
 '''
 
 from sys import argv, exit
-from os import path, mkdir, makedirs, environ
+from os import path, makedirs, environ
 import numpy as np
 from re import split
 
@@ -26,8 +26,10 @@ lRandomize = True
 seeding_type='debug' ; # By default, ha
 
 ldo_coastal_clean = True
-MinDistFromLand  = 100 ; # how far from the nearest coast should our buoys be? [km]
+distMax=100 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
+
+zAmpRand = 0.005 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
 
 l_CentralArctic = False ; # only keep points of the central Arctic
 
@@ -139,10 +141,6 @@ if __name__ == '__main__':
             print('ERROR: chosen record to read is < 0!',krec); exit(0)
     print('')
 
-
-    distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
-    
-    zAmpRand = 0.01 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
             
     if lCoarsen:
         # Coarsening:        
@@ -305,16 +303,18 @@ if __name__ == '__main__':
     XseedYX = sit.Geo2CartNPSkm1D( XseedGC ) ; # same for seeded initial positions, XseedGC->XseedYX
 
 
+    creskm = str(icrsn)+'km'
+
     cextra = ''
     
     if iHSS>1:
         cextra = '_HSS'+str(iHSS)
         
     if lCoarsen:
-        cextra='_'+str(icrsn)+'km'
+        cextra='_'+creskm
 
         if idebug>0 and iplot>0:
-            fdir = './figs/coarsen'
+            fdir = './figs/coarsen/'+creskm
             makedirs( fdir, exist_ok=True )
             ffig = fdir+'/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'_beforeCRSN'+'.png'
             cxtr = str.replace(cextra, '_', ' ')            
@@ -361,7 +361,7 @@ if __name__ == '__main__':
                                corigin='idealized_seeding' )
 
     if iplot>0:
-        fdir = './figs/coarsen'
+        fdir = './figs/coarsen/'+creskm
         makedirs( fdir, exist_ok=True )
         ffig = fdir+'/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.png'
 

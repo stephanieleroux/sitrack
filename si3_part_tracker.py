@@ -117,6 +117,8 @@ if __name__ == '__main__':
                 print('ERROR: we could not figure out `csfkm` and `cdtbin` from file name!',csfkm, cdtbin); exit(0)
         if itst==0: csfkm = ''
     #print(csfkm, cdtbin);exit(0)
+    creskm = csfkm[1:]
+
     
     # Some strings and start/end date of Seeding input file:
     idateSeedA, idateSeedB, SeedName, SeedBatch = sit.SeedFileTimeInfo( fNCseed, iverbose=idebug )
@@ -148,10 +150,9 @@ if __name__ == '__main__':
         print(' QUITTING since no matching model records!')
         exit(0)
 
-    cfdir = './figs/tracking'
+    cfdir = './figs/tracking/'+creskm    
     if iplot>0 and not path.exists(cfdir):
-        if not path.exists('./figs'): mkdir('./figs')
-        mkdir(cfdir)
+        makedirs( cfdir, exist_ok=True )
     for cd in ['nc', 'npz' ]:
         if not path.exists(cd): mkdir(cd)
 
