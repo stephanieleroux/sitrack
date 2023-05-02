@@ -15,7 +15,8 @@ from re import split
 import mojito   as mjt
 import sitrack  as sit
 
-from random import random
+#import random
+from random import random, choices
 
 
 idebug=0
@@ -346,10 +347,15 @@ if __name__ == '__main__':
 
     
     makedirs( './nc', exist_ok=True )
+
+    if lRandomize:
+        import string
+        crand = ''.join(choices(string.ascii_letters + string.digits, k=8))
+        cextra += '_'+crand
     
-    foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.nc'
-    
-    print('\n *** Saving seeding file for date =',mjt.epoch2clock(zTime[0]))
+    foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.nc'    
+    print('\n *** Saving seeding file for date =',mjt.epoch2clock(zTime[0]),'\n   => into:',foutnc)
+
     
     kk = sit.ncSaveCloudBuoys( foutnc, zTime, zIDs, XseedYX[:,:,0], XseedYX[:,:,1], XseedGC[:,:,0], XseedGC[:,:,1],
                                corigin='idealized_seeding' )
