@@ -271,13 +271,13 @@ if __name__ == '__main__':
             print('\n ERROR: Set the `DATA_DIR` environement variable!\n'); exit(0)
         fdist2coast_nc = cdata_dir+'/data/dist2coast/dist2coast_4deg_North.nc'
         #        
-        if lRandomize:
+        if lRandomize and distMin<distMax:
             zrc = 2.*random()-1. ; # random number between -1 and 1
-            MinDistFromLand =    0.5*(distMin + distMax) + zrc*0.5*(distMax - distMin)
-            print('LOLO: MinDistFromLand randomized =',MinDistFromLand)
+            MinDistFromLand =    0.5*(distMin + distMax) + zrc*0.5*(distMax - distMin)            
         else:
             MinDistFromLand = 0.5*(distMin + distMax)
-
+        print('LOLO: MinDistFromLand to use =',MinDistFromLand,'km')
+        
             
         mask = mjt.MaskCoastal( XseedGC, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
         print(' * Need to remove '+str(nP-np.sum(mask))+' points because too close to land! ('+str(MinDistFromLand)+'km)')
