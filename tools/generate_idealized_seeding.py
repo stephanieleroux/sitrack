@@ -19,7 +19,7 @@ import sitrack  as sit
 from random import random, choices
 
 
-idebug=0
+idebug=1
 iplot=1
 
 lRandomize = True
@@ -170,6 +170,7 @@ if __name__ == '__main__':
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.15 ; # degrees
+            ldo_coastal_clean=True; distMax=150 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.15 ; # degrees

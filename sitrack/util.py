@@ -402,8 +402,6 @@ def Geo2CartNPSkm1D( pcoorG, lat0=70., lon0=-45. ):
         print(' ERROR [Geo2CartNPSkm1D()]: input array `pcoorG` has a wrong a shape!')
         exit(0)
     #
-    print('LOLO Geo2CartNPSkm1D => lat0, lon0 =', lat0, lon0)
-    
     crs_src = PlateCarree() ;                                                   # this geographic coordinates (lat,lon)
     crs_trg = NorthPolarStereo(central_longitude=lon0, true_scale_latitude=lat0) ; # that's (lon,lat) to (x,y) RGPS ! (info from Anton)
     #
