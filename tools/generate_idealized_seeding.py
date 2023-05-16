@@ -19,14 +19,14 @@ import sitrack  as sit
 from random import random, choices
 
 
-idebug=1
+idebug=0
 iplot=1
 
 lRandomize = True
 
 seeding_type='debug' ; # By default, ha
 
-ldo_coastal_clean = True
+ldo_coastal_clean = False
 distMax=100 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
@@ -170,11 +170,11 @@ if __name__ == '__main__':
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            ldo_coastal_clean=True; distMax=200 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=False; distMax=200 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=False; distMax=150 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
             exit(0)
