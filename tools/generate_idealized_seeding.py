@@ -170,11 +170,12 @@ if __name__ == '__main__':
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.15 ; # degrees
+            rDssAmpl = 2.
             #distMax=120 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            rDssAmpl = 2.
+            rDssAmpl = 4.
             #distMax=300 ; distMin=50 ; # how far from the nearest coast should our buoys be? [km]
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
