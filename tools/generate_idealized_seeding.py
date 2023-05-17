@@ -32,7 +32,7 @@ fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
 zAmpRand = 0.005 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
 
-l_CentralArctic = False ; # only keep points of the central Arctic
+#l_CentralArctic = False ; # only keep points of the central Arctic
 
 lAddFpoints = False
 
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            ldo_coastal_clean=False; distMax=150 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=True; distMax=120 ; distMin=100 ; # how far from the nearest coast should our buoys be? [km]
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
             exit(0)
@@ -263,7 +263,6 @@ if __name__ == '__main__':
         XseedGC[:,:] = sit.CartNPSkm2Geo1D( zYX )
         del zYX
 
-
         
     if ldo_coastal_clean:
         #
@@ -271,15 +270,25 @@ if __name__ == '__main__':
         if cdata_dir==None:
             print('\n ERROR: Set the `DATA_DIR` environement variable!\n'); exit(0)
         fdist2coast_nc = cdata_dir+'/data/dist2coast/dist2coast_4deg_North.nc'
-        #        
+        #
+
+        #mjt.ShowBuoysMap( zTime[0], XseedGC[:,1], XseedGC[:,0],
+        #                  cfig='01_BEFORE_LL_DIST2COAST.png', cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
+        #                  zoom=1., title='Seeding initialization' )
+        
+        #mjt.ShowBuoysMap( zTime[0], XseedGC[:,1], XseedGC[:,0],
+        #                  cfig='02_AFTER_LL_DIST2COAST.png', cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
+        #                  zoom=1., title='Seeding initialization' )
+        #exit(0)
+
+        
         if lRandomize and distMin<distMax:
             zrc = 2.*random()-1. ; # random number between -1 and 1
             MinDistFromLand =    0.5*(distMin + distMax) + zrc*0.5*(distMax - distMin)            
         else:
             MinDistFromLand = 0.5*(distMin + distMax)
-        print('LOLO: MinDistFromLand to use =',MinDistFromLand,'km')
-        
-            
+        print(' *** `MinDistFromLand` to be used =',MinDistFromLand,'km')
+                    
         mask = mjt.MaskCoastal( XseedGC, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
         print(' * Need to remove '+str(nP-np.sum(mask))+' points because too close to land! ('+str(MinDistFromLand)+'km)')
         nP = np.sum(mask) ; # new size once buoys too close to land removed...
@@ -289,12 +298,12 @@ if __name__ == '__main__':
         del idxKeep
         
     
-    if l_CentralArctic:
-        (idxKeep,) = np.where( (XseedGC[:,0]>70.) & (np.mod(XseedGC[:,1],360.)>120.) & (np.mod(XseedGC[:,1],360.)<280.) | (XseedGC[:,0]>82.) )
-        nP = len(idxKeep)
-        zIDs = zIDs[idxKeep]
-        XseedGC =  np.array( [ np.squeeze(XseedGC[idxKeep,0]), np.squeeze(XseedGC[idxKeep,1]) ] ).T
-        del idxKeep
+    #if l_CentralArctic:
+    #    (idxKeep,) = np.where( (XseedGC[:,0]>70.) & (np.mod(XseedGC[:,1],360.)>120.) & (np.mod(XseedGC[:,1],360.)<280.) | (XseedGC[:,0]>82.) )
+    #    nP = len(idxKeep)
+    #    zIDs = zIDs[idxKeep]
+    #    XseedGC =  np.array( [ np.squeeze(XseedGC[idxKeep,0]), np.squeeze(XseedGC[idxKeep,1]) ] ).T
+    #    del idxKeep
 
 
     # Convert geoo coordinates to projected polar proj:
