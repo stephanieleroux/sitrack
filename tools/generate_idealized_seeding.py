@@ -26,12 +26,12 @@ lRandomize = True
 
 seeding_type='debug' ; # By default, ha
 
-ldo_coastal_clean = False
+ldo_coastal_clean = True
 distMax=100 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
 zAmpRand = 0.005 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
-
+rDssAmpl = 0.    ; # amplitude in [km] to add to rd_ss...
 #l_CentralArctic = False ; # only keep points of the central Arctic
 
 lAddFpoints = False
@@ -170,11 +170,12 @@ if __name__ == '__main__':
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            ldo_coastal_clean=False; distMax=200 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
+            #distMax=120 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            ldo_coastal_clean=True; distMax=120 ; distMin=100 ; # how far from the nearest coast should our buoys be? [km]
+            rDssAmpl = 2.
+            #distMax=300 ; distMin=50 ; # how far from the nearest coast should our buoys be? [km]
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
             exit(0)
@@ -330,6 +331,11 @@ if __name__ == '__main__':
                               zoom=1., title='Seeding initialization'+cxtr )
             
         #MIND: both XseedGC and XseedYX are in C-array-indexing...
+        
+        if lRandomize:
+            zrand = 2.*random()-1. ; # random number between -1 and 1
+            rd_ss = rd_ss + zrand*rDssAmpl
+            
         print('\n *** Applying spatial sub-sampling with radius: '+str(round(rd_ss,2))+'km')
         nPss, zYXss, idxKeep = mjt.SubSampCloud( rd_ss, XseedYX[:,:], convArray='C' )
         zGCss = XseedGC[idxKeep,:].copy()
