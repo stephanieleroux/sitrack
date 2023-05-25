@@ -269,8 +269,8 @@ def NearestPoint( pntGcoor, pLat, pLon, rd_found_km=10., resolkm=[], ji_prv=(), 
         jy, jx = jy+j1, jx+i1 ; # found in the zoom box => translate to indices in whole domain:
     #
     if jy<0 or jx<0 or jy>=Ny or jx>=Nx or igo==max_itr:
-        if ivrb>0: print('    WARNING [NearestPoint()]: did not find a nearest point for target point ',latP,lonP,' !')
-        if ivrb>0: print('            => last tested distance criterions =', rfnd,' km')
+        print('    WARNING [NearestPoint()]: did not find a nearest point for target point ',latP,lonP,' !')
+        print('            => last tested distance criterions =', rfnd,' km')
         jy, jx = -1,-1
     #
     return (jy, jx)
