@@ -122,6 +122,8 @@ if __name__ == '__main__':
                 print('ERROR: we could not figure out `csfkm` and `cdtbin` from file name!',csfkm, cdtbin); exit(0)
         if itst==0: csfkm = ''
     #print(csfkm, cdtbin);exit(0)
+
+    print(' *** The spatial resolution seems to be: '+creskm)
     creskm = csfkm[1:]
 
     
