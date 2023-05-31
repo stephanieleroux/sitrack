@@ -31,8 +31,8 @@ distMax=100 ; distMin = 100 ; # how far from the nearest coast should our buoys 
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
 zAmpRand = 0.005 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
-rDssAmpl = 0.    ; # amplitude in [km] to add to rd_ss...
-#l_CentralArctic = False ; # only keep points of the central Arctic
+
+l_CentralArctic = False ; # only keep points of the central Arctic
 
 lAddFpoints = False
 
@@ -46,15 +46,15 @@ def __argument_parsing__():
     parser = ap.ArgumentParser(description='SITRACK ICE PARTICULES TRACKER')
     rqrdNam = parser.add_argument_group('required arguments')
     #
-    rqrdNam.add_argument('-d', '--dat0', required=True,  help='initial date in the form <YYYY-MM-DD_hh:mm:ss>')
+    rqrdNam.add_argument('-d', '--dat0', required=True,       help='initial date in the form <YYYY-MM-DD_hh:mm:ss>')
     #
-    parser.add_argument('-m', '--fmmm' , default=None,   help='model `mesh_mask` file of NEMO config used in SI3 run')
-    parser.add_argument('-i', '--fsi3' , default=None,   help='output file of SI3 containing sea-ice concentration')
-    parser.add_argument('-v', '--nsic' , default='siconc',help='name of sea-ice concentration in SI3 file (default="siconc")')
-    parser.add_argument('-k', '--krec' , type=int, default=0,   help='record of seeding file to use to seed from (only if use SI3 file!)')
-    parser.add_argument('-S', '--ihss' , type=int, default=1,   help='horizontal subsampling factor to apply')
-    parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on SI3 model domain) to control seeding region')
-    parser.add_argument('-C', '--crsn' , type=int, default=0,   help='apply this coarsening in km')
+    parser.add_argument('-m', '--fmmm' , default=None,        help='model `mesh_mask` file of NEMO config used in SI3 run')
+    parser.add_argument('-i', '--fsi3' , default=None,        help='output file of SI3 containing sea-ice concentration')
+    parser.add_argument('-v', '--nsic' , default='siconc',    help='name of sea-ice concentration in SI3 file (default="siconc")')
+    parser.add_argument('-k', '--krec' , type=int, default=0, help='record of seeding file to use to seed from (only if use SI3 file!)')
+    parser.add_argument('-S', '--ihss' , type=int, default=1, help='horizontal subsampling factor to apply')
+    parser.add_argument('-f', '--fmsk' , default=None,        help='mask (on SI3 model domain) to control seeding region')
+    parser.add_argument('-C', '--crsn' , type=int, default=0, help='apply this coarsening in km')
     args = parser.parse_args()
 
     if args.fsi3 and not args.fmmm:
@@ -170,13 +170,10 @@ if __name__ == '__main__':
         elif icrsn==320:
             rd_ss = 315.6 ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            rDssAmpl = 2.
-            #distMax=120 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         elif icrsn==640:
             rd_ss = 636. ; # real shit!
             zAmpRand = 0.15 ; # degrees
-            rDssAmpl = 4.
-            #distMax=300 ; distMin=50 ; # how far from the nearest coast should our buoys be? [km]
+            ldo_coastal_clean=True; distMax=300 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
         else:
             print('ERROR: we do not know what `rd_ss` to pick for `icrsn` =',icrsn)
             exit(0)
