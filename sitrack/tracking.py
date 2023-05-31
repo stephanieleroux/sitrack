@@ -13,26 +13,28 @@ def GetTimeSpan( dt, vtime_mod, iSdA, iMdA, iMdB, iStop=None, iverbose=0 ):
     ltStop = ( iStop )
     #    
     # Confrontation of time info seeding and model:
-    from .util import epoch2clock
+    from .util import epoch2clock as e2c
     #
     if iSdA < iMdA-dt/2 or iSdA> iMdB-dt/2:
-        print('PROBLEM: time in the seeding file ('+epoch2clock(iSdA)+') is outside of what model spans!')
+        print('PROBLEM: time in the seeding file ('+e2c(iSdA)+') is outside of what model spans!')
         exit(0)
     #
     kt0 = np.argmin(np.abs(vtime_mod[:]-iSdA))
-    if iSdA >= vtime_mod[kt0]: kt0 += 1    
-    print('    * [GetTimeSpan]: will start using model record',kt0,'of SI3 file =>',epoch2clock(vtime_mod[kt0]))
+    if iSdA >= vtime_mod[kt0]: kt0 += 1
+    itM0 = vtime_mod[kt0]
+    print('    * [GetTimeSpan]: First record needed =',kt0,'of SI3 file =>',e2c(itM0))
     #
     if ltStop:
         ktN = np.argmin(np.abs(vtime_mod[:]-iStop))
     else:
-        ktN = len(vtime_mod) - 1        
-    print('    * [GetTimeSpan]: will stop at record',ktN,' =>',epoch2clock(vtime_mod[ktN]))
+        ktN = len(vtime_mod) - 1
+    itMN = vtime_mod[ktN]
+    print('    * [GetTimeSpan]: Last record needed =',ktN,'of SI3 file =>',e2c(itMN))
     Nt = ktN - kt0 + 1
     print('       ==> '+str(Nt)+' model records')
-    print('       ==> that makes '+str(round((vtime_mod[ktN]-vtime_mod[kt0])/(3600*24),3))+' days of ice particule tracking.')
+    print('       ==> that makes '+str(round((itMN-itM0)/(3600*24),3))+' days of ice particule tracking.')
     #
-    return Nt, kt0, ktN
+    return Nt, kt0, ktN, itM0, itMN
 
 
 

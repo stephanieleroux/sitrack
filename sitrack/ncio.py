@@ -6,7 +6,8 @@ import numpy as np
 #from re import split
 from netCDF4 import Dataset
 
-from .util import chck4f, epoch2clock, ConvertGeo2CartesianNPSkm
+from .util import chck4f, ConvertGeo2CartesianNPSkm
+from .util import epoch2clock as e2c
 
 
 
@@ -116,12 +117,12 @@ def GetModelSeaIceConc( fNCsi3, name='siconc', krec=0, expected_shape=[] ):
     print('    * [GetModelSeaIceConc]: reading "'+name+'" at record '+str(krec)+' in '+fNCsi3+' !')
     with Dataset(fNCsi3) as id_si3:
         zsic   = id_si3.variables[name][krec,:,:]
-        
+
     if len(expected_shape)>0:
         if np.shape(zsic) != expected_shape:
             print('ERROR [GetModelSeaIceConc]: wrong shape for sea-ice concentration read:',np.shape(zsic),', expected:',expected_shape)
             sys.exit(0)
-            
+
     return zsic
 
 
@@ -210,7 +211,7 @@ def LoadNCtime( cfile, ltime2d=False, iverbose=0 ):
         if not 'time' in list_var:
             print(' ERROR [LoadNCtime()]: no variable `'+time+'` found into input file!'); exit(0)
         Nt = id_in.dimensions['time'].size
-                
+
         # Time record:
         ctunits = id_in.variables['time'].units
         if not ctunits == tunits_default:
@@ -279,7 +280,7 @@ def LoadNCdata( cfile, krec=-1, lmask=False, lGetTimePos=False, iverbose=0 ):
         else:
             # All records will be read:
             idxR = np.arange( Nt, dtype=int ) ; # => `idxR` is a vector of integers !
-            
+
         ztime = id_in.variables['time'][idxR]
 
         # Buoys' IDs:
@@ -302,14 +303,14 @@ def LoadNCdata( cfile, krec=-1, lmask=False, lGetTimePos=False, iverbose=0 ):
         zLatLon = np.zeros((nP,2))
         zYX     = np.zeros((nP,2))
         zLatLon[:,:] = np.array([zlat,zlon]).T
-        zYX[:,:]     = np.array([ zy , zx ]).T        
+        zYX[:,:]     = np.array([ zy , zx ]).T
     else:
         zLatLon = np.zeros((Nt,nP,2))
         zYX     = np.zeros((Nt,nP,2))
         for jt in range(Nt):
             zLatLon[jt,:,:] = np.array([zlat[jt,:],zlon[jt,:]]).T
             zYX[jt,:,:]     = np.array([  zy[jt,:] , zx[jt,:]]).T
-    
+
     if lmask:
         if lGetTimePos:
             return ztime, kBIDs, zLatLon, zYX, zmsk, ztpos
@@ -322,27 +323,31 @@ def LoadNCdata( cfile, krec=-1, lmask=False, lGetTimePos=False, iverbose=0 ):
             return ztime, kBIDs, zLatLon, zYX
 
 
-def SeedFileTimeInfo( fSeedNc, iverbose=0 ):
-    #lili
+def SeedFileTimeInfo( fSeedNc, ltime2d=False, iverbose=0 ):
     from re import split
+    from math import ceil, floor
     #
     cSeed = str.replace( path.basename(fSeedNc), 'SELECTION_', '' )
     cSeed = str.replace( cSeed, '.nc', '' )
     cBtch = split('_',path.basename(fSeedNc))[2]
-
+    #
     chck4f(fSeedNc)
-    ntr, zt = LoadNCtime( fSeedNc, iverbose=iverbose )
-    idate0 = zt[0]     ; cdate0 = epoch2clock(idate0)
-    idateN = zt[ntr-1] ; cdateN = epoch2clock(idateN)
-    print('    * [SeedFileTimeInfo] => earliest and latest time position in the SEED file: '+cdate0+' - '+cdateN)
+    #
+    if ltime2d:
+        ntr, zt, zt2d  = LoadNCtime( fSeedNc, ltime2d=True, iverbose=iverbose )
+        idate0, idateN = np.min(zt2d), np.max(zt2d)
+    else:
+        ntr, zt       = LoadNCtime( fSeedNc,               iverbose=iverbose )
+        idate0, idateN = zt[0], zt[ntr-1]
+        zt2d = []
+    #
+    print('    * [SeedFileTimeInfo] => earliest and latest time position in the SEED file: '+e2c(idate0)+' - '+e2c(idateN))
+    # Generous rounding at the hour sharp:
+    idate0, idateN = int( floor(idate0/3600.)*3600. ), int( ceil(idateN/3600.)*3600. )
+    print('    * [SeedFileTimeInfo]  ==> will actually use rounded to the hour! => '+e2c(idate0)+' - '+e2c(idateN))
+    #
+    return idate0, idateN, cSeed, cBtch, zt2d
 
-    zdDate =  int( round( (idateN - idate0)/3600., 0 ) * 3600. )
-    print('    * [SeedFileTimeInfo] => rounded time span =>',zdDate/3600.,'hours')
-    idate0 =  int( round( idate0/3600., 0 ) * 3600. ) ; cdate0 = epoch2clock(idate0)
-    idateN = int( idate0 + zdDate )  ; cdateN = epoch2clock(idateN)
-    print('    * [SeedFileTimeInfo]  ==> will actually use rounded to the hour! => '+cdate0+' - '+cdateN)
-
-    return idate0, idateN, cSeed, cBtch
 
 
 def ModelFileTimeInfo( fModelNc, iverbose=0 ):
@@ -359,16 +364,12 @@ def ModelFileTimeInfo( fModelNc, iverbose=0 ):
     print('    * [ModelFileTimeInfo] => '+str(Nt)+' records in input MODEL file!')
     #
     idate0, idateN = np.min(ztime), np.max(ztime)
-    
-    print('    * [ModelFileTimeInfo] => earliest and latest time position in the MODEL file: '
-          +epoch2clock(idate0)+' - '+epoch2clock(idateN))
+    print('    * [ModelFileTimeInfo] => earliest and latest time position in the MODEL file: '+e2c(idate0)+' - '+e2c(idateN))
     #
-    zdDate =  int( round( (idateN - idate0)/3600., 0 ) * 3600. )
-    print('    * [ModelFileTimeInfo] => rounded time span =>',zdDate/3600.,'hours')
     # Infer name of NEMO CONFIG and experiment from SI3 file:
     vn = split('_',path.basename(fModelNc))
     nconf, nexpr = vn[0], split('-',vn[1])[1]
-    print('    * [ModelFileTimeInfo] => NEMO config and experiment =', nconf, nexpr)
+    print('    * [ModelFileTimeInfo] => NEMO config and experiment =', nconf, nexpr, '\n')
     #
     return Nt, ztime, idate0, idateN, nconf, nexpr
 

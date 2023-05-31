@@ -18,11 +18,15 @@ from math import atan2,pi
 
 #import gonzag as gzg
 import mojito  as mjt
+from mojito import epoch2clock as e2c
 import sitrack as sit
 
 
 idebug=0
 iplot=1
+
+lUseActualTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
+#                       #    => otherwize, it is tracked for 3 days...
 
 rdt = 3600 ; # time step (must be that of model output ice velocities used)
 
@@ -33,9 +37,6 @@ isubsamp_fig = 72 ; # frequency, in number of model records, we spawn a figure o
 iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
 #                 #  * 0 => use the same MEAN velocity in the whole cell => U = 0.5*(U[j,i-1] + U[j,i]), V = 0.5*(V[j-1,i] + U[j,i])
 #                 #  * 1 => use the same NEAREST velocity in the whole cell => U = U[@ nearest U-point], V = V[@ nearest V-point]
-
-
-
 
 def __argument_parsing__():
     '''
@@ -51,10 +52,6 @@ def __argument_parsing__():
     #
     parser.add_argument('-k', '--krec' , type=int, default=0, help='record of seeding file to use to seed from')
     parser.add_argument('-e', '--dend' ,  default=None,       help='date at which to stop')
-    #parser.add_argument('-f', '--fmsk' , default=None,   help='mask (on model domain) to control seeding region')
-    #parser.add_argument('-t', '--styp' , default='nemoTsi3',  help='seeding type ')
-    #
-    #parser.set_defaults(fmsk=None)
     #
     args = parser.parse_args()
     print('')
@@ -64,11 +61,7 @@ def __argument_parsing__():
     if args.dend:
         print(' *** Overidding date at which to stop =>', args.dend )
     #
-    #if args.fmsk:
-    #    print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
-    #
     return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend
-
 
 
 
@@ -81,12 +74,12 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, jrec, cdate_stop = __argument_parsing__()
+    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop = __argument_parsing__()
 
     print('cf_uv =',cf_uv)
     print('cf_mm =',cf_mm)
     print('fNCseed =',fNCseed)
-    print('jrec =',jrec)
+    print('jrecSeed =',jrecSeed)
     ldateStop=False
     if cdate_stop:
         ldateStop=True
@@ -128,8 +121,15 @@ if __name__ == '__main__':
     print(' *** The spatial resolution and dt_bin infered from file name: '+creskm+', '+cdtbin)
     
     # Some strings and start/end date of Seeding input file:
-    idateSeedA, idateSeedB, SeedName, SeedBatch = sit.SeedFileTimeInfo( fNCseed, iverbose=idebug )
 
+    idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUseActualTime, iverbose=idebug )
+    
+    if lUseActualTime:
+        (n2,nB) = np.shape(zTpos)
+        if n2!=2:
+            print('ERROR: wrong shape for the 2D time array!'); exit(0)
+        print(' ==> ok, we got the 2 time positions for '+str(nB)+' buoys! (`lUseActualTime==True`)\n')
+        
     # Same for model input file + time records info:
     Nt0, ztime_model, idateModA, idateModB, ModConf, ModExp = sit.ModelFileTimeInfo( cf_uv, iverbose=idebug )
     
@@ -151,12 +151,12 @@ if __name__ == '__main__':
     
         
     #
-    Nt, kstrt, kstop = sit.GetTimeSpan( rdt, ztime_model, idateSeedA, idateModA, idateModB , iStop=date_stop )
+    Nt, kstrt, kstop, iTmA, iTmB = sit.GetTimeSpan( rdt, ztime_model, idateSeedA, idateModA, idateModB , iStop=date_stop )
     #
     if Nt<1:
         print(' QUITTING since no matching model records!')
         exit(0)
-
+    
     cfdir = './figs/tracking/'+creskm    
     if iplot>0 and not path.exists(cfdir):
         makedirs( cfdir, exist_ok=True )
@@ -201,10 +201,11 @@ if __name__ == '__main__':
         # ----------------------------------------------------
 
         with Dataset(cf_uv) as ds_UVmod:
-            xIC[:,:] = ds_UVmod.variables['siconc'][0,:,:] ; # We need ice conc. at t=0 so we can cancel buoys accordingly
+            #xIC[:,:] = ds_UVmod.variables['siconc'][0,:,:] ; # We need ice conc. at t=0 so we can cancel buoys accordingly
+            xIC[:,:] = ds_UVmod.variables['siconc'][kstrt,:,:] ; # We need ice conc. at `t=kstrt` so we can cancel buoys accordingly
 
-        zt, zIDs, XseedG, XseedC = sit.LoadNCdata( fNCseed, krec=jrec, iverbose=idebug )
-        print('     => data used for seeding is read at date =',sit.epoch2clock(zt),'\n        (shape of XseedG =',np.shape(XseedG),')')
+        zt, zIDs, XseedG, XseedC = sit.LoadNCdata( fNCseed, krec=jrecSeed, iverbose=idebug )
+        print('     => data used for seeding is read at date =',e2c(zt),'\n        (shape of XseedG =',np.shape(XseedG),')')
         
         (nP,_) = np.shape(XseedG)
 
@@ -226,6 +227,32 @@ if __name__ == '__main__':
 
     del xResKM
 
+    # What is the first model record to use for each buoy:
+    z1stModelRec = np.zeros(nP, dtype=int) + kstrt ; # default 1st record is used
+
+    if lUseActualTime:
+        if nP != nB:
+            print('ERROR: `nP != nB` !'); exit(0)                
+        # Now, we need to check if any buoy initial time is actually beyond first record of the model:
+        #zTimeMod = ztime_model[kstrt:kstop+1].copy() ; # model's time data for range of interest...        
+        #for it in zTimeMod: print(e2c(it))                
+        #print('LOLO: iTmA, iTmB =', e2c(iTmA), e2c(iTmB))
+        lLater = (zTpos[0,:]>=iTmA+int(rdt/2))
+        if np.any(lLater):
+            #print('WARNING: there are initial buoy time position that are beyond first model record:')
+            (idxLate,) = np.where(lLater)
+            for jb in idxLate:
+                #print('    * buoy at pos.',jb,'starts at',e2c(zTpos[0,jb]))
+                (idx,) = np.where(ztime_model+int(rdt/2)<zTpos[0,jb])
+                jrc = idx[-1]+1
+                #print(' for jrc =',jrc, '(instead of jrc =',kstrt,') we have ztime_model[jrc] =',e2c(ztime_model[jrc]))
+                z1stModelRec[jb] = jrc
+        # DEBUG prompt! That's pretty important:
+        for jb in range(nP):
+            print(' * buoy '+str(jb)+': initial time =',e2c(zTpos[0,jb]),', 1st model rec to use has time:',e2c(ztime_model[z1stModelRec[jb]]))
+
+    # lili: ok we know which 1st record to use but not how to implement it in the loop to come yet! #lolo
+    exit(0)
 
     # Allocation for nP buoys:
     iAlive = np.zeros(      nP , dtype='i1') + 1 ; # tells if a buoy is alive (1) or zombie (0) (discontinued)
@@ -265,9 +292,9 @@ if __name__ == '__main__':
 
         rtmod = ds_UVmod.variables['time_counter'][jrec] ; # time of model data (center of the average period which should = rdt)
         itime = int(rtmod - rdt/2.) ; # velocitie is average under the whole rdt, at the center!
-        ctime = sit.epoch2clock(itime)
+        ctime = e2c(itime)
         print('\n *** Reading record #'+str(jrec+1)+'/'+str(Nt0)+' in SI3 file ==> date =',
-              ctime,'(model:'+sit.epoch2clock(int(rtmod))+')')
+              ctime,'(model:'+e2c(int(rtmod))+')')
         vTime[jt] = itime
 
         xIC[:,:] = ds_UVmod.variables['siconc'][jrec,:,:]
@@ -403,7 +430,7 @@ if __name__ == '__main__':
     xPosC = np.ma.masked_where( xmask==0, xPosC )
 
     # ==> time to save itime, xPosXX, xPosYY, xPosLo, xPosLa into a netCDF file !
-    cdt1, cdt2 = split(':',sit.epoch2clock(vTime[0]))[0] , split(':',sit.epoch2clock(vTime[Nt]))[0] ; # keeps at the hour precision...
+    cdt1, cdt2 = split(':',e2c(vTime[0]))[0] , split(':',e2c(vTime[Nt]))[0] ; # keeps at the hour precision...
     cdt1, cdt2 = str.replace( cdt1, '-', '') , str.replace( cdt2, '-', '')
     cdt1, cdt2 = str.replace( cdt1, '_', 'h') , str.replace( cdt2, '_', 'h')
     corgn = 'NEMO-SI3_'+ModConf+'_'+ModExp
@@ -433,5 +460,5 @@ if __name__ == '__main__':
 
 
 
-    print('        => first and final dates in simulated trajectories:',sit.epoch2clock(vTime[0]),sit.epoch2clock(vTime[-1]),'\n')
+    print('        => first and final dates in simulated trajectories:',e2c(vTime[0]),e2c(vTime[-1]),'\n')
 
