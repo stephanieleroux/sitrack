@@ -92,9 +92,12 @@ if __name__ == '__main__':
         ldateStop=True
         print('cdate_stop =',cdate_stop)
     print('\n')
+
+    fNCseedBN = path.basename(fNCseed)
+
     
     # Are we in a idealized seeding or not:
-    fncSsplt = split('\.', path.basename(fNCseed))[0]
+    fncSsplt = split('\.', fNCseedBN)[0]
     fncSsplt = split('_',fncSsplt)
     if fncSsplt[2] in ['nemoTsi3','nemoTmm']:
         print('\n *** Seems to be an idealized seeding of type "'+fncSsplt[2]+'"')
@@ -112,20 +115,17 @@ if __name__ == '__main__':
         itst=1        
         while not lok:
             itst-=1
-            csfkm = '_'+split( '_', split('\.',fNCseed)[-2] )[itst]
+            csfkm = '_'+split( '_', split('\.',fNCseedBN)[-2] )[itst]
             kres=-3+itst            
-            #print('LOLO: csfkm[-2:],lok,csfkm =',csfkm[-2:],lok,csfkm)
-            cdtbin = '_'+split( '_', split('\.',fNCseed)[-2] )[kres]
-            #print('LOLO: cdtbin =',cdtbin)
+            cdtbin = '_'+split( '_', split('\.',fNCseedBN)[-2] )[kres]
             lok = ( csfkm[-2:]=='km' and cdtbin[1:3]=='dt' ) or ( cdtbin[1:3]=='dt' and itst==0 )
             if itst<-4:
                 print('ERROR: we could not figure out `csfkm` and `cdtbin` from file name!',csfkm, cdtbin); exit(0)
         if itst==0: csfkm = ''
-    #print(csfkm, cdtbin);exit(0)
 
-    print(' *** The spatial resolution seems to be: '+creskm)
+        
     creskm = csfkm[1:]
-
+    print(' *** The spatial resolution and dt_bin infered from file name: '+creskm+', '+cdtbin)
     
     # Some strings and start/end date of Seeding input file:
     idateSeedA, idateSeedB, SeedName, SeedBatch = sit.SeedFileTimeInfo( fNCseed, iverbose=idebug )
