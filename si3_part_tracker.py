@@ -22,7 +22,7 @@ from mojito import epoch2clock as e2c
 import sitrack as sit
 
 
-idebug=2
+idebug=0
 iplot=1
 
 lUseActualTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
@@ -124,12 +124,6 @@ if __name__ == '__main__':
 
     idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUseActualTime, iverbose=idebug )
     
-    if lUseActualTime:
-        (n2,nB) = np.shape(zTpos)
-        if n2!=2:
-            print('ERROR: wrong shape for the 2D time array!'); exit(0)
-        print(' ==> ok, we got the 2 time positions for '+str(nB)+' buoys! (`lUseActualTime==True`)\n')
-        
     # Same for model input file + time records info:
     Nt0, ztime_model, idateModA, idateModB, ModConf, ModExp = sit.ModelFileTimeInfo( cf_uv, iverbose=idebug )
     
@@ -234,8 +228,13 @@ if __name__ == '__main__':
     zLstModelRec = np.zeros(nP, dtype=int) + kstop ; # default 1st record is used
 
     if lUseActualTime:
-        if nP != nB:
-            print('ERROR: `nP != nB` !'); exit(0)                
+
+        (n2,nB) = np.shape(zTpos)
+        if n2!=2 or nP!=nB:
+            print('ERROR: wrong shape for the 2D time array `zTpos`!'); exit(0)
+        print(' ==> ok, we got the 2 time positions for '+str(nB)+' buoys! (`lUseActualTime==True`)\n')
+        del nB
+        
         # Now, we need to check if any buoy initial time is actually beyond first record of the model:
         lLater = (zTpos[0,:]>=iTmA+int(rdt/2))
         if np.any(lLater):
@@ -284,7 +283,7 @@ if __name__ == '__main__':
 
     # Initial values for some arrays:
     if lUseActualTime:        
-        for jb in range(nB):
+        for jb in range(nP):
             k0 = z1stModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
             xPosC[k0,jb,:] = xPosC0[jb,:]
             xPosG[k0,jb,:] = xPosG0[jb,:]
@@ -294,7 +293,8 @@ if __name__ == '__main__':
         xPosG[0,:,:] = xPosG0
         xmask[0,:,:] = 1
     #
-    if iplot>0 and idebug>1:
+    #if iplot>0 and idebug>1:
+    if iplot>0:
         mjt.ShowBuoysMap( 0, xPosG0[:,1], xPosG0[:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+csfkm+'.png',
                           cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' ) ; #, pvIDs=IDs
 
@@ -313,11 +313,11 @@ if __name__ == '__main__':
 
         jrec = jt + kstrt ; # access into netCDF file...
 
-        rtmod = ds_UVmod.variables['time_counter'][jrec] ; # time of model data (center of the average period which should = rdt)
-        itime = int(rtmod - rdt/2.) ; # velocitie is average under the whole rdt, at the center!
+        itmod = int( ds_UVmod.variables['time_counter'][jrec] ); # time of model data (center of the average period which should = rdt)
+        itime = itmod - int(rdt/2.) ; # velocitie is average under the whole rdt, at the center!
         ctime = e2c(itime)
         print('\n *** Reading record #'+str(jrec+1)+'/'+str(Nt0)+' in SI3 file ==> date =',
-              ctime,'(model:'+e2c(int(rtmod))+')')
+              ctime,'(model:'+e2c(itmod)+')')
         vTime[jt] = itime
 
         xIC[:,:] = ds_UVmod.variables['siconc'][jrec,:,:]
@@ -326,9 +326,9 @@ if __name__ == '__main__':
 
         print('   *   current number of buoys alive = '+str(iAlive.sum()))
 
-        for jP in range(nP):
-
-            if iAlive[jP]==1:
+        for jP in range(nP):            
+            
+            if iAlive[jP]==1 and jrec>=z1stModelRec[jP] and jrec<=zLstModelRec[jP]:
 
                 [ ry  , rx   ] = xPosC[jt,jP,:] ; # km !
                 [ rlat, rlon ] = xPosG[jt,jP,:] ; # degrees !
@@ -433,7 +433,7 @@ if __name__ == '__main__':
 
                 ### if not lSI
 
-            ### if iAlive[jP]==1
+            ### if iAlive[jP]==1 and jrec>=z1stModelRec[jP] and jrec<=zLstModelRec[jP]
 
         ### for jP in range(nP)
 
@@ -463,8 +463,50 @@ if __name__ == '__main__':
                                mask=xmask[:,:,0], corigin=corgn )
 
 
+    #lili:
+    # Now we should create the 2-record (initial and final) nc file:
+    z2XY, z2GC, zMSK = np.zeros((2,nP,2)), np.zeros((2,nP,2)), np.zeros((2,nP,2), dtype='i1') ; # [record,n.buoys,yx]    
+    
+    if lUseActualTime:
+        #TODO: Do the 2D time buoy pos as well since we do not have the same time for each pos!!!
+        for jb in range(nP):
+            # First valid record for buoy jb:
+            k0 = z1stModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
+            z2XY[0,:,:] = xPosC[k0,:,:]
+            z2GC[0,:,:] = xPosG[k0,:,:]
+            zMSK[0,:,:] = xmask[k0,:,:]
+            # Last valid record for buoy jb:
+            kN = zLstModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
+            z2XY[1,:,:] = xPosC[kN,:,:]
+            z2GC[1,:,:] = xPosG[kN,:,:]
+            zMSK[1,:,:] = xmask[kN,:,:]
+            #        
+    else:
+            z2XY[0,:,:] = xPosC[0,:,:]
+            z2GC[0,:,:] = xPosG[0,:,:]
+            kN = zLstModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
+            z2XY[1,:,:] = xPosC[Nt,:,:]
+            z2GC[1,:,:] = xPosG[Nt,:,:]
+            zMSK[1,:,:] = xmask[Nt,:,:]
+
+    # TODO: save the netCDF files with 2 records with exact same pattern as that RGPS creates!!!!
+    
 
     if iplot>0:
+        # Show first and last valid records on the map of the Arctic:
+        for jt in range(2):
+            zLon = np.ma.masked_where( zMSK[jt,:,1]==0, z2GC[jt,:,1] )
+            zLat = np.ma.masked_where( zMSK[jt,:,0]==0, z2GC[jt,:,0] )
+            ctag = cdt1+'-'+cdt2+'_'+'%4.4i'%(jt)
+            cfig = cfdir+'/Pos_buoys_1st_Lst_'+SeedBatch+csfkm+'_'+ModExp+'_'+ctag+'.png'
+
+            mjt.ShowBuoysMap( vTime[jt], zLon, zLat, cfig=cfig,
+                              cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1.,
+                              title='IceTracker + SI3 '+ModExp+' u,v fields' ) ; # , pvIDs=IDs
+            del zLon, zLat
+                
+
+    if iplot>1:
         # Show on the map of the Arctic:
         for jt in range(Nt+1):
             if jt%isubsamp_fig == 0:
@@ -481,7 +523,5 @@ if __name__ == '__main__':
 
 
 
-
-
-    print('        => first and final dates in simulated trajectories:',e2c(vTime[0]),e2c(vTime[-1]),'\n')
+    print('        => global first and final dates in simulated trajectories:',e2c(vTime[0]),e2c(vTime[-1]),'\n')
 
