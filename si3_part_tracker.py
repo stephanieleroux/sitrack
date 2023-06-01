@@ -283,10 +283,15 @@ if __name__ == '__main__':
     lStillIn = np.zeros(nP, dtype=bool) ; # tells if a buoy is still within expected mesh/cell..
 
     # Initial values for some arrays:
-    xPosC[0,:,:] = xPosC0
-    xPosG[0,:,:] = xPosG0
-    xmask[0,:,:] = 1
-
+    
+    if lUseActualTime:
+        k0 = z1stModelRec[:] - kstrt ; # It's a vector in this case!!!!  #fixme: it's only okay when dt_model=1h ???
+    else:
+        k0 = 0
+    xPosC[k0,:,:] = xPosC0
+    xPosG[k0,:,:] = xPosG0
+    xmask[k0,:,:] = 1
+    exit(0)
     del xPosC0, xPosG0
 
     if iplot>0 and idebug>1:
