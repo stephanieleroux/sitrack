@@ -527,7 +527,7 @@ if __name__ == '__main__':
     cdt1, cdt2 = split(':',e2c(zvt[0]))[0] , split(':',e2c(zvt[1]))[0] ; # keeps at the hour precision...
     cdt1, cdt2 = str.replace( cdt1, '-', '') , str.replace( cdt2, '-', '')
     cdt1, cdt2 = str.replace( cdt1, '_', 'h') , str.replace( cdt2, '_', 'h')    
-    cf_nc_out = './nc/'+corgn+'_1stLst_tracking_'+SeedBatch+cdtbin+'_'+cdt1+'_'+cdt2+csfkm+'.nc'
+    cf_nc_out = './nc/'+corgn+'_tracking12_'+SeedBatch+cdtbin+'_'+cdt1+'_'+cdt2+csfkm+'.nc'
     
     kk = sit.ncSaveCloudBuoys( cf_nc_out, zvt, IDs, z2XY[:,:,0], z2XY[:,:,1], z2GC[:,:,0], z2GC[:,:,1],
                                mask=zMSK[:,:,0], xtime=zTim, corigin=corgn )
