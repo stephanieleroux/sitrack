@@ -121,7 +121,6 @@ if __name__ == '__main__':
     print(' *** The spatial resolution and dt_bin infered from file name: '+creskm+', '+cdtbin)
     
     # Some strings and start/end date of Seeding input file:
-
     idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUseActualTime, iverbose=idebug )
     
     # Same for model input file + time records info:
@@ -235,40 +234,50 @@ if __name__ == '__main__':
         print(' ==> ok, we got the 2 time positions for '+str(nB)+' buoys! (`lUseActualTime==True`)\n')
         del nB
         
+        zstarting_dates = np.unique( zTpos[0,:] )
+        zending_dates   = np.unique( zTpos[1,:] )
+        print('All different starting dates found:')
+        for kd in zstarting_dates:
+            (idx,) = np.where(zTpos[0,:]==kd)
+            print('    *',e2c(kd),' ==> ',len(idx),'occurences!')
+        print('\nAll different ending dates found:')
+        for kd in zending_dates:
+            (idx,) = np.where(zTpos[1,:]==kd)
+            print('    *',e2c(kd),' ==> ',len(idx),'occurences!')
+        print('')
+        
         # Now, we need to check if any buoy initial time is actually beyond first record of the model:
         lLater = (zTpos[0,:]>=iTmA+int(rdt/2))
         if np.any(lLater):
-            #print('WARNING: there are initial buoy time position that are beyond first model record:')
+            print('WARNING: there are initial buoy time position that are after first model record:')
             (idxLate,) = np.where(lLater)
             for jb in idxLate:
+                print(' * buoy at pos.',jb,'stars at',e2c(zTpos[0,jb]),'(last global model time=',e2c(iTmB),')')
                 #print('    * buoy at pos.',jb,'starts at',e2c(zTpos[0,jb]))
                 (idx,) = np.where(ztime_model+int(rdt/2)<zTpos[0,jb])
                 jrc = idx[-1]+1
-                #print(' for jrc =',jrc, '(instead of jrc =',kstrt,') we have ztime_model[jrc] =',e2c(ztime_model[jrc]))
+                print('  => for jrc =',jrc, '(instead of jrc =',kstrt,') we have ztime_model[jrc] =',e2c(ztime_model[jrc]))
                 z1stModelRec[jb] = jrc
 
+        print('')
         # Same, but for last needed record:
         lEarlr = (zTpos[1,:]<iTmB-int(rdt/2))
         if np.any(lEarlr):
             print('WARNING: there are final buoy time position that are before last model record:')
             (idxEarl,) = np.where(lEarlr)
             for jb in idxEarl:
-                print(' * buoy at pos.',jb,'ends at',e2c(zTpos[1,jb]),'(last used model time=',e2c(iTmB),')')
+                print(' * buoy at pos.',jb,'ends at',e2c(zTpos[1,jb]),'(last global model time=',e2c(iTmB),')')
                 (idx,) = np.where(ztime_model-int(rdt/2)>zTpos[1,jb])
                 jrc = idx[0]-1
                 print('  =>for jrc=',jrc, '(instead of jrc =',kstop,') we have ztime_model[jrc] =',e2c(ztime_model[jrc]))
                 zLstModelRec[jb] = jrc
-        #print('min and max for `zLstModelRec` =',np.min(zLstModelRec),np.max(zLstModelRec))
-        #(idxMx,)=np.where(zLstModelRec==np.max(zLstModelRec))
-        #print('Number of buoys that goes to the max:',len(idxMx))
 
-        # DEBUG prompt! That's pretty important:
-        for jb in range(0,nP,10):
-            print(' * B '+str(jb)+': init. & end time=',e2c(zTpos[0,jb]),e2c(zTpos[1,jb]),', 1st & last model rec to use:',
-                  e2c(ztime_model[z1stModelRec[jb]]),e2c(ztime_model[zLstModelRec[jb]]))
+        if idebug>1:
+            # Debug summary:
+            for jb in range(0,nP,10):
+                print(' * B '+str(jb)+': init. & end time=',e2c(zTpos[0,jb]),e2c(zTpos[1,jb]),', 1st & last model rec to use:',
+                      e2c(ztime_model[z1stModelRec[jb]]),e2c(ztime_model[zLstModelRec[jb]]))
 
-    # lili: ok we know which 1st record to use but not how to implement it in the loop to come yet! #lolo
-    #exit(0)
     #==============================================================================================================
 
     
@@ -282,19 +291,21 @@ if __name__ == '__main__':
     lStillIn = np.zeros(nP, dtype=bool) ; # tells if a buoy is still within expected mesh/cell..
 
     # Initial values for some arrays:
-    if lUseActualTime:        
+    if lUseActualTime:
+        xTime  = np.zeros((Nt+1,nP),dtype=int) + sit.FillValue ; # will contain the time of the model record used!!!
         for jb in range(nP):
             k0 = z1stModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
             xPosC[k0,jb,:] = xPosC0[jb,:]
             xPosG[k0,jb,:] = xPosG0[jb,:]
+            #print('LOLO: initial time for buoy',jb,', seeding file, model =',e2c(zTpos[0,jb]),e2c(ztime_model[z1stModelRec[jb]]))
+            xTime[k0,jb]   = ztime_model[z1stModelRec[jb]] - int(rdt/2)
             xmask[k0,jb,:] = 1
     else:
         xPosC[0,:,:] = xPosC0
         xPosG[0,:,:] = xPosG0
         xmask[0,:,:] = 1
-    #
-    #if iplot>0 and idebug>1:
-    if iplot>0:
+
+    if iplot>0 and idebug>0:
         mjt.ShowBuoysMap( 0, xPosG0[:,1], xPosG0[:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+csfkm+'.png',
                           cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' ) ; #, pvIDs=IDs
 
@@ -409,7 +420,10 @@ if __name__ == '__main__':
                 ry_nxt = ry + dy/1000. ; # [km]
                 xPosC[jt+1,jP,:] = [ ry_nxt, rx_nxt ]
                 xmask[jt+1,jP,:] = [    1  ,    1   ]
-
+                
+                if lUseActualTime:
+                    xTime[jt+1,jP] = itime + rdt ; # at `jt+1`, time is itime+rdt ! (xTime[0,:] filled earlier)
+                
                 # Is it still inside our mesh:
                 lSI = sit.IsInsideQuadrangle( ry_nxt, rx_nxt, vMesh[jP,:,:] )
                 lStillIn[jP] = lSI
@@ -451,47 +465,73 @@ if __name__ == '__main__':
     # Masking arrays:
     xPosG = np.ma.masked_where( xmask==0, xPosG )
     xPosC = np.ma.masked_where( xmask==0, xPosC )
+    xTime = np.ma.masked_where( xmask[:,:,0]==0, xTime )
 
+    
     # ==> time to save itime, xPosXX, xPosYY, xPosLo, xPosLa into a netCDF file !
     cdt1, cdt2 = split(':',e2c(vTime[0]))[0] , split(':',e2c(vTime[Nt]))[0] ; # keeps at the hour precision...
     cdt1, cdt2 = str.replace( cdt1, '-', '') , str.replace( cdt2, '-', '')
     cdt1, cdt2 = str.replace( cdt1, '_', 'h') , str.replace( cdt2, '_', 'h')
     corgn = 'NEMO-SI3_'+ModConf+'_'+ModExp
-    cf_nc_out = './nc/'+corgn+'_tracking_'+SeedBatch+cdtbin+'_'+cdt1+'_'+cdt2+csfkm+'.nc'
 
-    kk = sit.ncSaveCloudBuoys( cf_nc_out, vTime, IDs, xPosC[:,:,0], xPosC[:,:,1], xPosG[:,:,0], xPosG[:,:,1],
-                               mask=xmask[:,:,0], corigin=corgn )
+    if not lUseActualTime:
+        # Save series at each model time step:
+        cf_nc_out = './nc/'+corgn+'_tracking_'+SeedBatch+cdtbin+'_'+cdt1+'_'+cdt2+csfkm+'.nc'
+        kk = sit.ncSaveCloudBuoys( cf_nc_out, vTime, IDs, xPosC[:,:,0], xPosC[:,:,1], xPosG[:,:,0], xPosG[:,:,1],
+                                   mask=xmask[:,:,0], corigin=corgn )
 
 
-    #lili:
-    # Now we should create the 2-record (initial and final) nc file:
-    z2XY, z2GC, zMSK = np.zeros((2,nP,2)), np.zeros((2,nP,2)), np.zeros((2,nP,2), dtype='i1') ; # [record,n.buoys,yx]    
+
+    # Now we should create the 2-record (initial and final) nc file (mandatory if `lUseActualTime` !):
+
+    z2XY, z2GC, zMSK = np.zeros((2,nP,2)), np.zeros((2,nP,2)), np.zeros((2,nP,2),dtype='i1') ; # [record,n.buoys,yx]    
     
     if lUseActualTime:
-        #TODO: Do the 2D time buoy pos as well since we do not have the same time for each pos!!!
+        
+        if idebug>1:
+            for jb in range(0,nP,10):
+                print(' * xPosC at jt=Nt-3,Nt-2,Nt-1,Nt =',
+                      Nt-3,Nt-2,Nt-1,Nt,'  ',xPosC[Nt-3,jb,0],xPosC[Nt-2,jb,0],xPosC[Nt-1,jb,0],xPosC[Nt,jb,0],'zLstModelRec[jb]-kstrt=',zLstModelRec[jb]-kstrt)
+            print()
+        
+        zTim = np.zeros((2,nP),dtype=int)
         for jb in range(nP):
             # First valid record for buoy jb:
             k0 = z1stModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
-            z2XY[0,:,:] = xPosC[k0,:,:]
-            z2GC[0,:,:] = xPosG[k0,:,:]
-            zMSK[0,:,:] = xmask[k0,:,:]
+            z2XY[0,jb,:] = xPosC[k0,jb,:]
+            z2GC[0,jb,:] = xPosG[k0,jb,:]
+            zTim[0,jb]   = xTime[k0,jb]
+            zMSK[0,jb,:] = xmask[k0,jb,:]
             # Last valid record for buoy jb:
-            kN = zLstModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
-            z2XY[1,:,:] = xPosC[kN,:,:]
-            z2GC[1,:,:] = xPosG[kN,:,:]
-            zMSK[1,:,:] = xmask[kN,:,:]
-            #        
+            kN = zLstModelRec[jb] - kstrt + 1; # yes! `+1` is needed! #fixme: it's only okay when dt_model=1h ???
+            z2XY[1,jb,:] = xPosC[kN,jb,:]
+            z2GC[1,jb,:] = xPosG[kN,jb,:]
+            zTim[1,jb]   = xTime[kN,jb]
+            zMSK[1,jb,:] = xmask[kN,jb,:]
+            #
+        zvt = np.array([ np.mean(zTim[0,:]), np.mean(zTim[1,:]) ])
+        
     else:
-            z2XY[0,:,:] = xPosC[0,:,:]
-            z2GC[0,:,:] = xPosG[0,:,:]
-            kN = zLstModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
-            z2XY[1,:,:] = xPosC[Nt,:,:]
-            z2GC[1,:,:] = xPosG[Nt,:,:]
-            zMSK[1,:,:] = xmask[Nt,:,:]
+        z2XY[0,:,:] = xPosC[0,:,:]
+        z2GC[0,:,:] = xPosG[0,:,:]
+        zMSK[0,:,:] = xmask[0,:,:]
+        z2XY[1,:,:] = xPosC[Nt,:,:]
+        z2GC[1,:,:] = xPosG[Nt,:,:]
+        zMSK[1,:,:] = xmask[Nt,:,:]
+        zTim = [] ;  # not needed!
+        #
+        zvt = np.array([ vTime[0], vTime[Nt] ])
 
-    # TODO: save the netCDF files with 2 records with exact same pattern as that RGPS creates!!!!
     
-
+    # Save the netCDF files with 2 records (first and last) with exact same pattern as done with RGPS data in mojito:
+    cdt1, cdt2 = split(':',e2c(zvt[0]))[0] , split(':',e2c(zvt[1]))[0] ; # keeps at the hour precision...
+    cdt1, cdt2 = str.replace( cdt1, '-', '') , str.replace( cdt2, '-', '')
+    cdt1, cdt2 = str.replace( cdt1, '_', 'h') , str.replace( cdt2, '_', 'h')    
+    cf_nc_out = './nc/'+corgn+'_1stLst_tracking_'+SeedBatch+cdtbin+'_'+cdt1+'_'+cdt2+csfkm+'.nc'
+    
+    kk = sit.ncSaveCloudBuoys( cf_nc_out, zvt, IDs, z2XY[:,:,0], z2XY[:,:,1], z2GC[:,:,0], z2GC[:,:,1],
+                               mask=zMSK[:,:,0], xtime=zTim, corigin=corgn )
+    
     if iplot>0:
         # Show first and last valid records on the map of the Arctic:
         for jt in range(2):
@@ -500,7 +540,7 @@ if __name__ == '__main__':
             ctag = cdt1+'-'+cdt2+'_'+'%4.4i'%(jt)
             cfig = cfdir+'/Pos_buoys_1st_Lst_'+SeedBatch+csfkm+'_'+ModExp+'_'+ctag+'.png'
 
-            mjt.ShowBuoysMap( vTime[jt], zLon, zLat, cfig=cfig,
+            mjt.ShowBuoysMap( zvt[jt], zLon, zLat, cfig=cfig,
                               cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1.,
                               title='IceTracker + SI3 '+ModExp+' u,v fields' ) ; # , pvIDs=IDs
             del zLon, zLat
@@ -523,5 +563,5 @@ if __name__ == '__main__':
 
 
 
-    print('        => global first and final dates in simulated trajectories:',e2c(vTime[0]),e2c(vTime[-1]),'\n')
+    print('        => global first and final dates in simulated trajectories:',e2c(zvt[0]),e2c(zvt[1]),'\n')
 
