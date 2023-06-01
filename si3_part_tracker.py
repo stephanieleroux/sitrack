@@ -22,7 +22,7 @@ from mojito import epoch2clock as e2c
 import sitrack as sit
 
 
-idebug=0
+idebug=2
 iplot=1
 
 lUseActualTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
@@ -283,23 +283,22 @@ if __name__ == '__main__':
     lStillIn = np.zeros(nP, dtype=bool) ; # tells if a buoy is still within expected mesh/cell..
 
     # Initial values for some arrays:
-    
-    if lUseActualTime:
-        k0 = z1stModelRec[:] - kstrt ; # It's a vector in this case!!!!  #fixme: it's only okay when dt_model=1h ???
+    if lUseActualTime:        
+        for jb in range(nB):
+            k0 = z1stModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
+            xPosC[k0,jb,:] = xPosC0[jb,:]
+            xPosG[k0,jb,:] = xPosG0[jb,:]
+            xmask[k0,jb,:] = 1
     else:
-        k0 = 0
-    xPosC[k0,:,:] = xPosC0
-    xPosG[k0,:,:] = xPosG0
-    xmask[k0,:,:] = 1
-    exit(0)
-    del xPosC0, xPosG0
-
+        xPosC[0,:,:] = xPosC0
+        xPosG[0,:,:] = xPosG0
+        xmask[0,:,:] = 1
+    #
     if iplot>0 and idebug>1:
-        mjt.ShowBuoysMap( 0, xPosG[0,:,1], xPosG[0,:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+'%4.4i'%(jt)+csfkm+'.png',
+        mjt.ShowBuoysMap( 0, xPosG0[:,1], xPosG0[:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+csfkm+'.png',
                           cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' ) ; #, pvIDs=IDs
 
-
-
+    del xPosC0, xPosG0
 
 
 
