@@ -227,16 +227,16 @@ if __name__ == '__main__':
 
     del xResKM
 
-    # What is the first model record to use for each buoy:
+    
+    # ========= Should be an external function ===================================================
+    # What is the first and last model record to use for each buoy:
     z1stModelRec = np.zeros(nP, dtype=int) + kstrt ; # default 1st record is used
+    zLstModelRec = np.zeros(nP, dtype=int) + kstop ; # default 1st record is used
 
     if lUseActualTime:
         if nP != nB:
             print('ERROR: `nP != nB` !'); exit(0)                
         # Now, we need to check if any buoy initial time is actually beyond first record of the model:
-        #zTimeMod = ztime_model[kstrt:kstop+1].copy() ; # model's time data for range of interest...        
-        #for it in zTimeMod: print(e2c(it))                
-        #print('LOLO: iTmA, iTmB =', e2c(iTmA), e2c(iTmB))
         lLater = (zTpos[0,:]>=iTmA+int(rdt/2))
         if np.any(lLater):
             #print('WARNING: there are initial buoy time position that are beyond first model record:')
@@ -247,13 +247,32 @@ if __name__ == '__main__':
                 jrc = idx[-1]+1
                 #print(' for jrc =',jrc, '(instead of jrc =',kstrt,') we have ztime_model[jrc] =',e2c(ztime_model[jrc]))
                 z1stModelRec[jb] = jrc
+
+        # Same, but for last needed record:
+        lEarlr = (zTpos[1,:]<iTmB-int(rdt/2))
+        if np.any(lEarlr):
+            print('WARNING: there are final buoy time position that are before last model record:')
+            (idxEarl,) = np.where(lEarlr)
+            for jb in idxEarl:
+                print(' * buoy at pos.',jb,'ends at',e2c(zTpos[1,jb]),'(last used model time=',e2c(iTmB),')')
+                (idx,) = np.where(ztime_model-int(rdt/2)>zTpos[1,jb])
+                jrc = idx[0]-1
+                print('  =>for jrc=',jrc, '(instead of jrc =',kstop,') we have ztime_model[jrc] =',e2c(ztime_model[jrc]))
+                zLstModelRec[jb] = jrc
+        #print('min and max for `zLstModelRec` =',np.min(zLstModelRec),np.max(zLstModelRec))
+        #(idxMx,)=np.where(zLstModelRec==np.max(zLstModelRec))
+        #print('Number of buoys that goes to the max:',len(idxMx))
+
         # DEBUG prompt! That's pretty important:
-        for jb in range(nP):
-            print(' * buoy '+str(jb)+': initial time =',e2c(zTpos[0,jb]),', 1st model rec to use has time:',e2c(ztime_model[z1stModelRec[jb]]))
+        for jb in range(0,nP,10):
+            print(' * B '+str(jb)+': init. & end time=',e2c(zTpos[0,jb]),e2c(zTpos[1,jb]),', 1st & last model rec to use:',
+                  e2c(ztime_model[z1stModelRec[jb]]),e2c(ztime_model[zLstModelRec[jb]]))
 
     # lili: ok we know which 1st record to use but not how to implement it in the loop to come yet! #lolo
-    exit(0)
+    #exit(0)
+    #==============================================================================================================
 
+    
     # Allocation for nP buoys:
     iAlive = np.zeros(      nP , dtype='i1') + 1 ; # tells if a buoy is alive (1) or zombie (0) (discontinued)
     vTime  = np.zeros( Nt+1, dtype=int ) ; # UNIX epoch time associated to position below
