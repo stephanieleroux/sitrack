@@ -538,7 +538,7 @@ if __name__ == '__main__':
             zLon = np.ma.masked_where( zMSK[jt,:,1]==0, z2GC[jt,:,1] )
             zLat = np.ma.masked_where( zMSK[jt,:,0]==0, z2GC[jt,:,0] )
             ctag = cdt1+'-'+cdt2+'_'+'%4.4i'%(jt)
-            cfig = cfdir+'/Pos_buoys_1st_Lst_'+SeedBatch+csfkm+'_'+ModExp+'_'+ctag+'.png'
+            cfig = cfdir+'/Pos_buoys_1stLst_'+SeedBatch+csfkm+'_'+ModExp+'_'+ctag+'.png'
 
             mjt.ShowBuoysMap( zvt[jt], zLon, zLat, cfig=cfig,
                               cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1.,
