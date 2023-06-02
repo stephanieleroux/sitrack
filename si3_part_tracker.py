@@ -154,7 +154,7 @@ if __name__ == '__main__':
     if iplot>0 and not path.exists(cfdir):
         makedirs( cfdir, exist_ok=True )
     for cd in ['nc', 'npz' ]:
-        if not path.exists(cd): mkdir(cd)
+        makedirs( cd, exist_ok=True )
 
     # Getting model grid metrics and friends:
     imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = sit.GetModelGrid( cf_mm )
