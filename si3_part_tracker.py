@@ -149,8 +149,11 @@ if __name__ == '__main__':
     if Nt<1:
         print(' QUITTING since no matching model records!')
         exit(0)
-    
-    cfdir = './figs/tracking/'+creskm    
+
+    crk = creskm
+    cc = split('-',creskm)
+    if len(cc)==2: crk = cc[1]
+    cfdir = './figs/tracking/'+crk    
     if iplot>0 and not path.exists(cfdir):
         makedirs( cfdir, exist_ok=True )
     for cd in ['nc', 'npz' ]:
