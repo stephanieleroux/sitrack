@@ -198,6 +198,7 @@ if __name__ == '__main__':
             IDs   = data['IDs']
             vJIt  = data['vJIt']
             VRTCS = data['VRTCS']
+            idxK  = data['idxKeep']
             
     else:
 
@@ -231,7 +232,7 @@ if __name__ == '__main__':
         
         # This first stage is fairly costly so saving the info:
         print('\n *** Saving intermediate data into '+cf_npz_itm+'!')
-        np.savez_compressed( cf_npz_itm, nP=nP, xPosG0=xPosG0, xPosC0=xPosC0, IDs=IDs, vJIt=vJIt, VRTCS=VRTCS )
+        np.savez_compressed( cf_npz_itm, nP=nP, xPosG0=xPosG0, xPosC0=xPosC0, IDs=IDs, vJIt=vJIt, VRTCS=VRTCS, idxKeep=idxK )
 
     del xResKM
 
