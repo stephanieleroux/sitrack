@@ -51,7 +51,8 @@ def __argument_parsing__():
     rqrdNam.add_argument('-s', '--fsdg', required=True,  help='seeding file')
     #
     parser.add_argument('-k', '--krec' , type=int, default=0, help='record of seeding file to use to seed from')
-    parser.add_argument('-e', '--dend' ,  default=None,       help='date at which to stop')
+    parser.add_argument('-e', '--dend' , default=None,       help='date at which to stop')
+    parser.add_argument('-N', '--nmexp', default='',         help='name of model experiment if it matters...')
     #
     args = parser.parse_args()
     print('')
@@ -59,9 +60,11 @@ def __argument_parsing__():
     print(' *** SI3 `mesh_mask` metrics file        => ', args.fmmm)
     print(' *** Seeding file and record to use      => ', args.fsdg, args.krec )
     if args.dend:
-        print(' *** Overidding date at which to stop =>', args.dend )
+        print(' *** Overidding date at which to stop =>', args.dend )        
+    if args.nmexp != '':
+        print(' *** Name of model experiment =>', args.nmexp )
     #
-    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend
+    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend, args.nmexp
 
 
 
@@ -74,8 +77,10 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop = __argument_parsing__()
+    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop, cname_exp = __argument_parsing__()
 
+    lNameExp = (cname_exp != '')
+    
     print('cf_uv =',cf_uv)
     print('cf_mm =',cf_mm)
     print('fNCseed =',fNCseed)
@@ -88,6 +93,8 @@ if __name__ == '__main__':
 
     fNCseedBN = path.basename(fNCseed)
 
+    if lNameExp:
+        print('name of experiment =',cname_exp, lNameExp)
     
     # Are we in a idealized seeding or not:
     fncSsplt = split('\.', fNCseedBN)[0]
@@ -173,6 +180,8 @@ if __name__ == '__main__':
 
     # We need a name for the intermediate backup file:
     cf_npz_itm = './npz/Initialized_buoys_'+SeedName+'.npz'
+    if lNameExp:
+        cf_npz_itm = './npz/Initialized_buoys_'+SeedName+'_'+cname_exp+'.npz'
 
 
     ############################
@@ -181,7 +190,7 @@ if __name__ == '__main__':
 
     if path.exists(cf_npz_itm):
         # We save a lot of energy by using the previously generated intermediate backup file:        
-        print('\n *** We found file '+cf_npz_itm+' here! So using it and skeeping first stage!')
+        print('\n *** We found file '+cf_npz_itm+' here! So using it and skipping first stage!')
         with np.load(cf_npz_itm) as data:
             nP    = data['nP']
             xPosG0 = data['xPosG0']
@@ -189,7 +198,6 @@ if __name__ == '__main__':
             IDs   = data['IDs']
             vJIt  = data['vJIt']
             VRTCS = data['VRTCS']
-        exit(0)
             
     else:
 
@@ -470,9 +478,9 @@ if __name__ == '__main__':
 
 
     # Masking arrays:
-    xPosG = np.ma.masked_where( xmask==0, xPosG )
-    xPosC = np.ma.masked_where( xmask==0, xPosC )
-    xTime = np.ma.masked_where( xmask[:,:,0]==0, xTime )
+    #xPosG = np.ma.masked_where( xmask==0, xPosG )
+    #xPosC = np.ma.masked_where( xmask==0, xPosC )
+    #xTime = np.ma.masked_where( xmask[:,:,0]==0, xTime )
 
     
     # ==> time to save itime, xPosXX, xPosYY, xPosLo, xPosLa into a netCDF file !
