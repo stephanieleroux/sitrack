@@ -130,7 +130,6 @@ if __name__ == '__main__':
     date_stop = None
     if ldateStop:
         # A stop date explicitely asked at command line:
-        #print('LOLO: cdate_stop =',cdate_stop)
         if len(cdate_stop)==19:
             date_stop = mjt.clock2epoch( cdate_stop )
         else:
@@ -190,14 +189,14 @@ if __name__ == '__main__':
             IDs   = data['IDs']
             vJIt  = data['vJIt']
             VRTCS = data['VRTCS']
-
+        exit(0)
+            
     else:
 
         # Going through whole initialization / seeding process
         # ----------------------------------------------------
 
         with Dataset(cf_uv) as ds_UVmod:
-            #xIC[:,:] = ds_UVmod.variables['siconc'][0,:,:] ; # We need ice conc. at t=0 so we can cancel buoys accordingly
             xIC[:,:] = ds_UVmod.variables['siconc'][kstrt,:,:] ; # We need ice conc. at `t=kstrt` so we can cancel buoys accordingly
 
         zt, zIDs, XseedG, XseedC = sit.LoadNCdata( fNCseed, krec=jrecSeed, iverbose=idebug )
@@ -208,15 +207,20 @@ if __name__ == '__main__':
         # We want an ID for each seeded buoy:
         IDs = np.array( range(nP), dtype=int) + 1 ; # Default! No ID=0 !!!
 
-
         IDs[:] = zIDs[:]
         del zIDs
 
         # Find the location of each seeded buoy onto the model grid:
-        nP, xPosG0, xPosC0, IDs, vJIt, VRTCS = sit.SeedInit( IDs, XseedG, XseedC, xlatT, xlonT, xYf, xXf,
-                                                             xResKM, imaskt, xIceConc=xIC, iverbose=idebug )
+        nPn, xPosG0, xPosC0, IDs, vJIt, VRTCS, idxK = sit.SeedInit( IDs, XseedG, XseedC, xlatT, xlonT, xYf, xXf,
+                                                                    xResKM, imaskt, xIceConc=xIC, iverbose=idebug )
         del XseedG, XseedC
 
+        if nPn<nP:
+            print('\n *** `SeedInit()` had to cancel '+str(nP-nPn)+
+                  ' buoys! => adjusting `zTpos` and updating nP from '+str(nP)+' to '+str(nPn)+'!')
+            zTpos = zTpos[:,idxK]
+            nP = nPn
+        
         # This first stage is fairly costly so saving the info:
         print('\n *** Saving intermediate data into '+cf_npz_itm+'!')
         np.savez_compressed( cf_npz_itm, nP=nP, xPosG0=xPosG0, xPosC0=xPosC0, IDs=IDs, vJIt=vJIt, VRTCS=VRTCS )
@@ -233,7 +237,8 @@ if __name__ == '__main__':
 
         (n2,nB) = np.shape(zTpos)
         if n2!=2 or nP!=nB:
-            print('ERROR: wrong shape for the 2D time array `zTpos`!'); exit(0)
+            print('ERROR: wrong shape for the 2D time array `zTpos`! `n2,nB`, vs `nP`:',n2,nB,nP)
+            exit(0)
         print(' ==> ok, we got the 2 time positions for '+str(nB)+' buoys! (`lUseActualTime==True`)\n')
         del nB
         
@@ -300,7 +305,6 @@ if __name__ == '__main__':
             k0 = z1stModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
             xPosC[k0,jb,:] = xPosC0[jb,:]
             xPosG[k0,jb,:] = xPosG0[jb,:]
-            #print('LOLO: initial time for buoy',jb,', seeding file, model =',e2c(zTpos[0,jb]),e2c(ztime_model[z1stModelRec[jb]]))
             xTime[k0,jb]   = ztime_model[z1stModelRec[jb]] - int(rdt/2)
             xmask[k0,jb,:] = 1
     else:

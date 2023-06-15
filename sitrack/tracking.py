@@ -113,7 +113,7 @@ def SeedInit( pIDs, pSG, pSC, platT, plonT, pYf, pXf, pResolKM, maskT, xIceConc=
     #                                 #  as buoys move moves within the cell, it might not be the nearest point)
     zjiT    = np.zeros((nP,2),   dtype=int)
     zJIvrt  = np.zeros((nP,2,4), dtype=int)
-    kcancel = np.zeros( nP ,     dtype='i1') + 1
+    kmask = np.zeros( nP ,     dtype='i1') + 1
 
     time_start = time()
     
@@ -122,7 +122,7 @@ def SeedInit( pIDs, pSG, pSC, platT, plonT, pYf, pXf, pResolKM, maskT, xIceConc=
         if jP%100==0:
             print('   * [SeedInit()]: finding nearest T-point and host cell... buoy #'+str(jP)+' / '+str(nP)+' ...')
         
-        if iverbose>0:
+        if iverbose>1:
             print('   * [SeedInit()]: focus on buoy with ID:'+str(pIDs[jP]))
 
         # Initial position of the buoy:
@@ -134,19 +134,21 @@ def SeedInit( pIDs, pSG, pSC, platT, plonT, pYf, pXf, pResolKM, maskT, xIceConc=
         (jT, iT) = NearestPoint( (zlat,zlon), platT, plonT, rd_found_km=rFoundKM, resolkm=pResolKM, max_itr=10 )
 
         if jT<0 or iT<0:
-            kcancel[jP] = 0
+            kmask[jP] = 0
             if iverbose>0: print('        ===> I CANCEL buoy '+str(pIDs[jP])+'!!! (NO nearest T-point found for ',zlat,zlon,')')
                             
-        if kcancel[jP] == 1:            
+        if kmask[jP] == 1:            
             # Ok a nearest point was found!    
-            if iverbose>0:
+            if iverbose>1:
                 print('     ==> nearest T-point for ',zlat,zlon,' on NEMO grid:', jT, iT, '==> lat,lon:',
                       round(platT[jT,iT],3), round(plonT[jT,iT],3))
             # Tests for canceling buoy or not:
             icncl = Survive( pIDs[jP], [jT,iT] , maskT, pIceC=xIceConc, iverbose=iverbose )
-            if icncl>0: kcancel[jP] = 0
+            if icncl>0:
+                kmask[jP] = 0
+                if iverbose>0: print('        ===> I CANCEL buoy '+str(pIDs[jP])+'!!! (Did not pass `Survive()` test!)')
             
-        if kcancel[jP] == 1:
+        if kmask[jP] == 1:
             # Everything is okay, now we locate the cell/mesh (polygon joining 4 F-points) that includes
             # our target point (zy,zx)
             lPin, zjiT[jP,:], zJIvrt[jP,:,:] = FindContainingCell( (zy,zx), (jT,iT), pYf, pXf, iverbose=iverbose )
@@ -154,25 +156,27 @@ def SeedInit( pIDs, pSG, pSC, platT, plonT, pYf, pXf, pResolKM, maskT, xIceConc=
             if not lPin:
                 print('WARNING [SeedInit()]: could not find the proper F-point cell!!!')
                 print('         => when lookin for point:',zlat,zlon)
-                kcancel[jP] = 0
+                kmask[jP] = 0
                 if iverbose>0: print('        ===> I CANCEL buoy '+str(pIDs[jP])+'!!! (NO proper F-point cell found)')
                         
     ### for jP in range(nP)
     time_stop = time()
     print(' * [SeedInit]: number of seconds it took to locate all the points in a target grid cell:', time_stop-time_start )
     
-    # Now we can shrink the arrays based on `kcancel`
+    # Now we can shrink the arrays based on `kmask`
     iKeep = np.arange(nP,dtype=int)
-    nPn   = np.sum(kcancel)
+    nPn   = np.sum(kmask)
     if nPn<nP:
-        (iGone,) = np.where(kcancel==0)
+        (iGone,) = np.where(kmask==0)
         print(' * [SeedInit()]: '+str(nP-nPn)+' "to-be-seeded" buoys have to be canceled.')
         print('          => their IDs:',pIDs[iGone])
         print('        ==> need to shrink some arrays, number of valid buoys is now',nPn)
         nP = nPn
-        (iKeep,) = np.where(kcancel==1)
+        (iKeep,) = np.where(kmask==1)
+        
                 
-    return nP, pSG[iKeep,:], pSC[iKeep,:], pIDs[iKeep], zjiT[iKeep,:], zJIvrt[iKeep,:,:]
+    return nP, pSG[iKeep,:], pSC[iKeep,:], pIDs[iKeep], zjiT[iKeep,:], zJIvrt[iKeep,:,:], iKeep
+
 
 
 def CrossedEdge( pP1, pP2, ji4vert, pY, pX,  iverbose=0 ):
@@ -403,7 +407,7 @@ def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=[],
             jj = idy_keepF[jp]
             ji = idx_keepF[jp]
             zLatLonF[jp,:] = [ zlatF[jj,ji],zlonF[jj,ji] ]
-        print('LOLO: [nemoSeed()]: adding ',NbIPtF,'F-points to the',NbIPt,'T-points!')
+        print(' * [nemoSeed()]: adding ',NbIPtF,'F-points to the',NbIPt,'T-points!')
         zLatLon = np.concatenate( [ zLatLon, zLatLonF ])
         
     return zLatLon
