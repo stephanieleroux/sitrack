@@ -22,7 +22,7 @@ from random import random, choices
 idebug=0
 iplot=1
 
-lRandomize = True
+lRandomize = True ; rDssAmpl = 0.5
 
 seeding_type='debug' ; # By default, ha
 
