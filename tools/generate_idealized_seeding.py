@@ -55,6 +55,7 @@ def __argument_parsing__():
     parser.add_argument('-S', '--ihss' , type=int, default=1, help='horizontal subsampling factor to apply')
     parser.add_argument('-f', '--fmsk' , default=None,        help='mask (on SI3 model domain) to control seeding region')
     parser.add_argument('-C', '--crsn' , type=int, default=0, help='apply this coarsening in km')
+    parser.add_argument('-N', '--ncnf' , default='NANUK4',    help='name of the horizontak NEMO config used')
     args = parser.parse_args()
 
     if args.fsi3 and not args.fmmm:
@@ -75,8 +76,11 @@ def __argument_parsing__():
         print(' *** Will apply masking on seeding data, file to use => ', args.fmsk )
     if args.crsn>=1:
         print(' *** Will apply a coarsening on cloud of points, at scale => ', args.crsn,'km' )
+    if args.ncnf:
+        print(' *** Name of the horizontak NEMO config used => ', args.ncnf)
+
     #
-    return args.dat0, args.fsi3, args.nsic, args.krec, args.fmmm, args.ihss, args.fmsk, args.crsn
+    return args.dat0, args.fsi3, args.nsic, args.krec, args.fmmm, args.ihss, args.fmsk, args.crsn, args.ncnf
 
 
 
@@ -103,7 +107,7 @@ if __name__ == '__main__':
     lnemoMM  = False
     lnemoSI3 = False
         
-    cdate0, cf_si3, cv_sic, krec, cf_mm, iHSS, cf_force_msk, icrsn = __argument_parsing__()
+    cdate0, cf_si3, cv_sic, krec, cf_mm, iHSS, cf_force_msk, icrsn, CONF = __argument_parsing__()
 
     if cf_mm:
         lnemoMM  = True
@@ -118,7 +122,14 @@ if __name__ == '__main__':
 
     lCoarsen = ( icrsn>=1 )
         
-
+    if iplot>0:
+        if   CONF=='NANUK4':
+            name_proj = 'CentralArctic'
+        elif CONF=='HUDSON4':
+            name_proj = 'HudsonB'
+        else:
+            print('ERROR: CONF "'+CONF+'" is unknown (to know what proj to use for plots...)')
+            exit(0)
     
     print('\n *** Input SUMMARY:')
     print('cdate0 =',cdate0)
@@ -383,7 +394,7 @@ if __name__ == '__main__':
         cextra = str.replace(cextra, '_', ' ')
         
         mjt.ShowBuoysMap( zTime[0], XseedGC[0,:,1], XseedGC[0,:,0],
-                          cfig=ffig, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
+                          cfig=ffig, nmproj=name_proj, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True,
                           zoom=1., title='Seeding initialization'+cextra )
     
 
