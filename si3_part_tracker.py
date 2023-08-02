@@ -25,7 +25,7 @@ import sitrack as sit
 idebug=0
 iplot=1
 
-lUseActualTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
+#lUseActualTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
 #                       #    => otherwize, it is tracked for 3 days...
 
 rdt = 3600 ; # time step (must be that of model output ice velocities used)
@@ -42,8 +42,9 @@ iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
 def __argument_parsing__():
     '''
     ARGUMENT PARSING / USAGE
-    '''
+    '''    
     import argparse as ap
+    global lUseActualTime
     #
     parser = ap.ArgumentParser(description='SITRACK ICE PARTICULES TRACKER')
     rqrdNam = parser.add_argument_group('required arguments')
@@ -53,7 +54,9 @@ def __argument_parsing__():
     #
     parser.add_argument('-k', '--krec' , type=int, default=0, help='record of seeding file to use to seed from')
     parser.add_argument('-e', '--dend' , default=None,       help='date at which to stop')
-    parser.add_argument('-N', '--nmexp', default='',         help='name of model experiment if it matters...')
+    parser.add_argument('-E', '--nmexp', default='',         help='name of model experiment if it matters...')
+    parser.add_argument('-F', '--fxdt',  action="store_true",  help='fixed tracking time (1D time array)')
+    parser.add_argument('-N', '--ncnf' , default='NANUK4',    help='name of the horizontak NEMO config used')
     #
     args = parser.parse_args()
     print('')
@@ -64,8 +67,12 @@ def __argument_parsing__():
         print(' *** Overidding date at which to stop =>', args.dend )        
     if args.nmexp != '':
         print(' *** Name of model experiment =>', args.nmexp )
+    if args.ncnf:
+        print(' *** Name of the horizontak NEMO config used => ', args.ncnf)
     #
-    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend, args.nmexp
+    lUseActualTime = not args.fxdt
+    
+    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend, args.nmexp, args.ncnf
 
 
 
@@ -78,10 +85,12 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop, cname_exp = __argument_parsing__()
+    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop, cname_exp, CONF = __argument_parsing__()
 
     lNameExp = (cname_exp != '')
+
     
+    print(' lUseActualTime =',lUseActualTime)
     print('cf_uv =',cf_uv)
     print('cf_mm =',cf_mm)
     print('fNCseed =',fNCseed)
@@ -96,7 +105,16 @@ if __name__ == '__main__':
 
     if lNameExp:
         print('name of experiment =',cname_exp, lNameExp)
-    
+
+    if iplot>0:
+        if   CONF=='NANUK4':
+            name_proj = 'CentralArctic'
+        elif CONF=='HUDSON4':
+            name_proj = 'HudsonB'
+        else:
+            print('ERROR: CONF "'+CONF+'" is unknown (to know what proj to use for plots...)')
+            exit(0)
+
     # Are we in a idealized seeding or not:
     fncSsplt = split('\.', fNCseedBN)[0]
     fncSsplt = split('_',fncSsplt)
@@ -324,7 +342,7 @@ if __name__ == '__main__':
 
     if iplot>0 and idebug>0:
         mjt.ShowBuoysMap( 0, xPosG0[:,1], xPosG0[:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+csfkm+'.png',
-                          cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' ) ; #, pvIDs=IDs
+                          nmproj=name_proj, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' ) ; #, pvIDs=IDs
 
     del xPosC0, xPosG0
 
@@ -557,7 +575,7 @@ if __name__ == '__main__':
             ctag = cdt1+'-'+cdt2+'_'+'%4.4i'%(jt)
             cfig = cfdir+'/Pos_buoys_1stLst_'+SeedBatch+csfkm+'_'+ModExp+'_'+ctag+'.png'
 
-            mjt.ShowBuoysMap( zvt[jt], zLon, zLat, cfig=cfig,
+            mjt.ShowBuoysMap( zvt[jt], zLon, zLat, cfig=cfig, nmproj=name_proj, 
                               cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1.,
                               title='IceTracker + SI3 '+ModExp+' u,v fields' ) ; # , pvIDs=IDs
             del zLon, zLat
@@ -572,7 +590,7 @@ if __name__ == '__main__':
                 ctag = cdt1+'-'+cdt2+'_'+'%4.4i'%(jt)
                 cfig = cfdir+'/Pos_buoys_'+SeedBatch+csfkm+'_'+ModExp+'_'+ctag+'.png'
 
-                mjt.ShowBuoysMap( vTime[jt], zLon, zLat, cfig=cfig,
+                mjt.ShowBuoysMap( vTime[jt], zLon, zLat, cfig=cfig, nmproj=name_proj,
                                   cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1.,
                                   title='IceTracker + SI3 '+ModExp+' u,v fields' ) ; # , pvIDs=IDs
                 del zLon, zLat
