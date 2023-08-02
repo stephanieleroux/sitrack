@@ -22,7 +22,7 @@ from random import random, choices
 idebug=0
 iplot=1
 
-lRandomize = True ; rDssAmpl = 0.5
+lRandomize = True ; rDssAmpl = 0.001
 
 seeding_type='debug' ; # By default, ha
 
@@ -30,7 +30,7 @@ ldo_coastal_clean = True
 distMax=100 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
-zAmpRand = 0.005 ; # amplitude of change in degrees to apply too coordinates if randomiztion!
+
 
 l_CentralArctic = False ; # only keep points of the central Arctic
 
@@ -153,7 +153,6 @@ if __name__ == '__main__':
             print('ERROR: chosen record to read is < 0!',krec); exit(0)
     print('')
 
-            
     if lCoarsen:
         # Coarsening:        
         if   icrsn==10:
@@ -164,7 +163,7 @@ if __name__ == '__main__':
             #rd_ss =  6.2 ; # to test !!!! => 10.05
             rd_ss =  6. ; # to test !!!! => fine...
             #zAmpRand = 0.05 ; # degrees
-            zAmpRand = 0.1 ; # degrees
+            zAmpRand = 0.02 ; # degrees
         elif icrsn==20:
             lAddFpoints=True
             rd_ss = 14.6 ; # real shit! 
@@ -292,11 +291,11 @@ if __name__ == '__main__':
         #exit(0)
 
         
-        if lRandomize and distMin<distMax:
-            zrc = 2.*random()-1. ; # random number between -1 and 1
-            MinDistFromLand =    0.5*(distMin + distMax) + zrc*0.5*(distMax - distMin)            
-        else:
-            MinDistFromLand = 0.5*(distMin + distMax)
+        #if lRandomize and distMin<distMax:
+        #    zrc = 2.*random()-1. ; # random number between -1 and 1
+        #    MinDistFromLand =    0.5*(distMin + distMax) + zrc*0.5*(distMax - distMin)            
+        #else:
+        MinDistFromLand = 0.5*(distMin + distMax)
         print(' *** `MinDistFromLand` to be used =',MinDistFromLand,'km')
                     
         mask = mjt.MaskCoastal( XseedGC, rMinDistLand=MinDistFromLand, fNCdist2coast=fdist2coast_nc, convArray='C' )
@@ -341,9 +340,9 @@ if __name__ == '__main__':
             
         #MIND: both XseedGC and XseedYX are in C-array-indexing...
         
-        if lRandomize:
-            zrand = 2.*random()-1. ; # random number between -1 and 1
-            rd_ss = rd_ss + zrand*rDssAmpl
+        #if lRandomize:
+        #    zrand = 2.*random()-1. ; # random number between -1 and 1
+        #    rd_ss = rd_ss + zrand*rDssAmpl
             
         print('\n *** Applying spatial sub-sampling with radius: '+str(round(rd_ss,2))+'km')
         nPss, zYXss, idxKeep = mjt.SubSampCloud( rd_ss, XseedYX[:,:], convArray='C' )
@@ -373,10 +372,10 @@ if __name__ == '__main__':
     
     makedirs( './nc', exist_ok=True )
 
-    if lRandomize:
-        import string
-        crand = ''.join(choices(string.ascii_letters + string.digits, k=8))
-        cextra += '_'+crand
+    #if lRandomize:
+    #    import string
+    #    crand = ''.join(choices(string.ascii_letters + string.digits, k=8))
+    #    cextra += '_'+crand
     
     foutnc = './nc/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.nc'    
     print('\n *** Saving seeding file for date =',mjt.epoch2clock(zTime[0]),'\n   => into:',foutnc)

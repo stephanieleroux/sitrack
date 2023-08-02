@@ -35,7 +35,8 @@ toDegrees = 180./pi
 isubsamp_fig = 72 ; # frequency, in number of model records, we spawn a figure on the map (if idebug>2!!!)
 
 iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
-#                 #  * 0 => use the same MEAN velocity in the whole cell => U = 0.5*(U[j,i-1] + U[j,i]), V = 0.5*(V[j-1,i] + U[j,i])
+#iUVstrategy = 0 ; #  What U,V should we use inside a given T-cell of the model?
+#                 #  * 0 => use the same MEAN velocity in the whole cell => U = 0.5*(U[j,i-1] + U[j,i]), V = 0.5*(V[j-1,i] + V[j,i])
 #                 #  * 1 => use the same NEAREST velocity in the whole cell => U = U[@ nearest U-point], V = V[@ nearest V-point]
 
 def __argument_parsing__():
