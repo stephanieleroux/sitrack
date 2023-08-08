@@ -220,7 +220,7 @@ if __name__ == '__main__':
             idxK  = data['idxKeep']
             
     else:
-
+        print('\n *** We did not find file '+cf_npz_itm+' ! => going through nearest point scanning...')
         # Going through whole initialization / seeding process
         # ----------------------------------------------------
 
