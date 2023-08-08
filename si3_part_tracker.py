@@ -181,7 +181,7 @@ if __name__ == '__main__':
     cfdir = './figs/tracking/'+crk    
     if iplot>0 and not path.exists(cfdir):
         makedirs( cfdir, exist_ok=True )
-    for cd in ['nc', 'npz' ]:
+    for cd in [ 'seed', 'nc', 'npz' ]:
         makedirs( cd, exist_ok=True )
 
     # Getting model grid metrics and friends:
@@ -198,9 +198,9 @@ if __name__ == '__main__':
     xIC = np.zeros((Nj,Ni)) ; # Sea-ice concentration
 
     # We need a name for the intermediate backup file:
-    cf_npz_itm = './npz/Initialized_buoys_'+SeedName+'.npz'
+    cf_npz_itm = './seed/Initialized_buoys_'+SeedName+'.npz'
     if lNameExp:
-        cf_npz_itm = './npz/Initialized_buoys_'+SeedName+'_'+cname_exp+'.npz'
+        cf_npz_itm = './seed/Initialized_buoys_'+SeedName+'_'+cname_exp+'.npz'
 
 
     ############################
@@ -249,10 +249,12 @@ if __name__ == '__main__':
             zTpos = zTpos[:,idxK]
             nP = nPn
         
-        # This first stage is fairly costly so saving the info:
+        # This first stage is fairly costly, so saving the info:
         print('\n *** Saving intermediate data into '+cf_npz_itm+'!')
         np.savez_compressed( cf_npz_itm, nP=nP, xPosG0=xPosG0, xPosC0=xPosC0, IDs=IDs, vJIt=vJIt, VRTCS=VRTCS, idxKeep=idxK )
 
+    ### if path.exists(cf_npz_itm)
+    
     del xResKM
 
     
