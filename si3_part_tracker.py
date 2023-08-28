@@ -148,7 +148,7 @@ if __name__ == '__main__':
     
     # Some strings and start/end date of Seeding input file:
     idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUseActualTime, iverbose=idebug )
-    
+
     # Same for model input file + time records info:
     Nt0, ztime_model, idateModA, idateModB, ModConf, ModExp = sit.ModelFileTimeInfo( cf_uv, iverbose=idebug )
     
@@ -198,10 +198,7 @@ if __name__ == '__main__':
     xIC = np.zeros((Nj,Ni)) ; # Sea-ice concentration
 
     # We need a name for the intermediate backup file:
-    cf_npz_itm = './seed/Initialized_buoys_'+SeedName+'.npz'
-    if lNameExp:
-        cf_npz_itm = './seed/Initialized_buoys_'+SeedName+'_'+cname_exp+'.npz'
-
+    cf_npz_itm = './seed/Initialized_buoys_'+SeedName+'_'+CONF+'.npz'
 
     ############################
     # Initialization / Seeding #
