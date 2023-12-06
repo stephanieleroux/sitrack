@@ -22,7 +22,7 @@ from random import random, choices
 idebug=0
 iplot=1
 
-lRandomize = True ; rDssAmpl = 0.001
+#lRandomize = True ; rDssAmpl = 0.001
 
 seeding_type='debug' ; # By default, ha
 
@@ -51,7 +51,7 @@ def __argument_parsing__():
     parser.add_argument('-m', '--fmmm' , default=None,        help='model `mesh_mask` file of NEMO config used in SI3 run')
     parser.add_argument('-i', '--fsi3' , default=None,        help='output file of SI3 containing sea-ice concentration')
     parser.add_argument('-v', '--nsic' , default='siconc',    help='name of sea-ice concentration in SI3 file (default="siconc")')
-    parser.add_argument('-k', '--krec' , type=int, default=0, help='record of seeding file to use to seed from (only if use SI3 file!)')
+    parser.add_argument('-k', '--krec' , type=int, default=0, help='use sea-ice concentration at this record (only if you did specify a SI3 file with `--fsi3`!)')
     parser.add_argument('-S', '--ihss' , type=int, default=1, help='horizontal subsampling factor to apply')
     parser.add_argument('-f', '--fmsk' , default=None,        help='mask (on SI3 model domain) to control seeding region')
     parser.add_argument('-C', '--crsn' , type=int, default=0, help='apply this coarsening in km')
@@ -255,22 +255,22 @@ if __name__ == '__main__':
     cdate = str.replace(cdate, '-', '')
     
 
-    if lRandomize:
-        # Working with stereo projection rather than geographic coordinates to avoid North-Pole singularity:
-        zYX = sit.Geo2CartNPSkm1D( XseedGC )
-        #
-        for jP in range(nP):
-            zr1 = 2.*random()-1. ; # random number between -1 and 1
-            zr2 = 2.*random()-1. ; # random number between -1 and 1
-            #
-            [zy,zx] = zYX[jP,:]
-            #
-            zy = zy + zAmpRand*110.*zr1 ; # because 1 degree ~ 110 km...
-            zx = zx + zAmpRand*110.*zr2
-            zYX[jP,:] = [zy,zx]
-            #
-        XseedGC[:,:] = sit.CartNPSkm2Geo1D( zYX )
-        del zYX
+    #if lRandomize:
+    #    # Working with stereo projection rather than geographic coordinates to avoid North-Pole singularity:
+    #    zYX = sit.Geo2CartNPSkm1D( XseedGC )
+    #    #
+    #    for jP in range(nP):
+    #        zr1 = 2.*random()-1. ; # random number between -1 and 1
+    #        zr2 = 2.*random()-1. ; # random number between -1 and 1
+    #        #
+    #        [zy,zx] = zYX[jP,:]
+    #        #
+    #        zy = zy + zAmpRand*110.*zr1 ; # because 1 degree ~ 110 km...
+    #        zx = zx + zAmpRand*110.*zr2
+    #        zYX[jP,:] = [zy,zx]
+    #        #
+    #    XseedGC[:,:] = sit.CartNPSkm2Geo1D( zYX )
+    #    del zYX
 
         
     if ldo_coastal_clean:
@@ -319,7 +319,9 @@ if __name__ == '__main__':
     XseedYX = sit.Geo2CartNPSkm1D( XseedGC ) ; # same for seeded initial positions, XseedGC->XseedYX
 
 
-    creskm = str(icrsn)+'km'
+    creskm = ''
+    if lCoarsen:
+        creskm = str(icrsn)+'km'
 
     cextra = ''
     
@@ -385,7 +387,7 @@ if __name__ == '__main__':
                                corigin='idealized_seeding' )
 
     if iplot>0:
-        fdir = './figs/coarsen/'+creskm
+        fdir = './figs/SEEDING'
         makedirs( fdir, exist_ok=True )
         ffig = fdir+'/sitrack_seeding_'+seeding_type+'_'+cdate+cextra+'.png'
 

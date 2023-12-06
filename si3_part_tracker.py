@@ -25,14 +25,14 @@ import sitrack as sit
 idebug=0
 iplot=1
 
-#lUseActualTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
+#lUse2DTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
 #                       #    => otherwize, it is tracked for 3 days...
 
-rdt = 3600 ; # time step (must be that of model output ice velocities used)
+rdt = 3600. ; #FIXME!!! time step [s] (must be that of model output ice velocities used)
 
 toDegrees = 180./pi
 
-isubsamp_fig = 72 ; # frequency, in number of model records, we spawn a figure on the map (if idebug>2!!!)
+ifreq_plot = 24 ; # frequency, in terms of number of model records, we spawn a figure on the map (if idebug>2!!!)
 
 iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
 #iUVstrategy = 0 ; #  What U,V should we use inside a given T-cell of the model?
@@ -44,7 +44,7 @@ def __argument_parsing__():
     ARGUMENT PARSING / USAGE
     '''    
     import argparse as ap
-    global lUseActualTime
+    global lUse2DTime
     #
     parser = ap.ArgumentParser(description='SITRACK ICE PARTICULES TRACKER')
     rqrdNam = parser.add_argument_group('required arguments')
@@ -52,11 +52,11 @@ def __argument_parsing__():
     rqrdNam.add_argument('-m', '--fmmm', required=True, help='model `mesh_mask` file of NEMO config used in SI3 run')
     rqrdNam.add_argument('-s', '--fsdg', required=True,  help='seeding file')
     #
-    parser.add_argument('-k', '--krec' , type=int, default=0, help='record of seeding file to use to seed from')
-    parser.add_argument('-e', '--dend' , default=None,       help='date at which to stop')
-    parser.add_argument('-E', '--nmexp', default='',         help='name of model experiment if it matters...')
+    parser.add_argument('-k', '--krec' , type=int, default=0,  help='record of seeding file to use to seed from')
+    parser.add_argument('-e', '--dend' , default=None,         help='date at which to stop')
     parser.add_argument('-F', '--fxdt',  action="store_true",  help='fixed tracking time (1D time array)')
-    parser.add_argument('-N', '--ncnf' , default='NANUK4',    help='name of the horizontak NEMO config used')
+    parser.add_argument('-N', '--ncnf' , default='NANUK4',     help='name of the horizontak NEMO config used')
+    parser.add_argument('-p', '--plot' , type=int, default=0,  help='how often, in terms of model records, we plot the positions on a map')
     #
     args = parser.parse_args()
     print('')
@@ -65,14 +65,12 @@ def __argument_parsing__():
     print(' *** Seeding file and record to use      => ', args.fsdg, args.krec )
     if args.dend:
         print(' *** Overidding date at which to stop =>', args.dend )        
-    if args.nmexp != '':
-        print(' *** Name of model experiment =>', args.nmexp )
     if args.ncnf:
         print(' *** Name of the horizontak NEMO config used => ', args.ncnf)
     #
-    lUseActualTime = not args.fxdt
+    lUse2DTime = not args.fxdt
     
-    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend, args.nmexp, args.ncnf
+    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend, args.ncnf, args.plot
 
 
 
@@ -85,12 +83,9 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop, cname_exp, CONF = __argument_parsing__()
+    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop, CONF, ifreq_plot = __argument_parsing__()
 
-    lNameExp = (cname_exp != '')
-
-    
-    print(' lUseActualTime =',lUseActualTime)
+    print(' lUse2DTime =',lUse2DTime)
     print('cf_uv =',cf_uv)
     print('cf_mm =',cf_mm)
     print('fNCseed =',fNCseed)
@@ -103,9 +98,6 @@ if __name__ == '__main__':
 
     fNCseedBN = path.basename(fNCseed)
 
-    if lNameExp:
-        print('name of experiment =',cname_exp, lNameExp)
-
     if iplot>0:
         if   CONF=='NANUK4':
             name_proj = 'CentralArctic'
@@ -115,13 +107,18 @@ if __name__ == '__main__':
             print('ERROR: CONF "'+CONF+'" is unknown (to know what proj to use for plots...)')
             exit(0)
 
+    lplot = (ifreq_plot>0)
+    if lplot:
+        print(' *** We shall plot a map with the position of virtual buoys every '+str(ifreq_plot)+' model records => '+str(int(rdt)*ifreq_plot/3600)+' hours')
+
+
+    csfkm, creskm = '', ''
     # Are we in a idealized seeding or not:
     fncSsplt = split('\.', fNCseedBN)[0]
     fncSsplt = split('_',fncSsplt)
     if fncSsplt[2] in ['nemoTsi3','nemoTmm']:
         print('\n *** Seems to be an idealized seeding of type "'+fncSsplt[2]+'"')
-        cdtbin = '_idlSeed'
-        csfkm = '_Xkm'
+        cdtbin = '_idlSeed'        
         for ii in [1,2,3]:
             ckm = '_'+fncSsplt[-ii]
             if ckm[-2:]=='km':
@@ -142,12 +139,15 @@ if __name__ == '__main__':
                 print('ERROR: we could not figure out `csfkm` and `cdtbin` from file name!',csfkm, cdtbin); exit(0)
         if itst==0: csfkm = ''
 
-        
-    creskm = csfkm[1:]
-    print(' *** The spatial resolution and dt_bin infered from file name: '+creskm+', '+cdtbin)
+
+    if csfkm != '':
+        creskm = csfkm[1:]
+        print(' *** The spatial resolution and dt_bin infered from file name: '+creskm+', '+cdtbin)
+    else:
+        creskm = ''
     
     # Some strings and start/end date of Seeding input file:
-    idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUseActualTime, iverbose=idebug )
+    idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUse2DTime, iverbose=idebug )
 
     # Same for model input file + time records info:
     Nt0, ztime_model, idateModA, idateModB, ModConf, ModExp = sit.ModelFileTimeInfo( cf_uv, iverbose=idebug )
@@ -159,7 +159,7 @@ if __name__ == '__main__':
         if len(cdate_stop)==19:
             date_stop = mjt.clock2epoch( cdate_stop )
         else:
-            date_stop = mjt.clock2epoch( cdate_stop, precision='D', cfrmt='basic' )
+            date_stop = mjt.clock2epoch( cdate_stop, precision='D', cfrmt='guess' )
         
     elif idateSeedB - idateSeedA >= 3600.:
         # => there are more than 1 record in the file we use for seeding!!!
@@ -260,13 +260,13 @@ if __name__ == '__main__':
     z1stModelRec = np.zeros(nP, dtype=int) + kstrt ; # default 1st record is used
     zLstModelRec = np.zeros(nP, dtype=int) + kstop ; # default 1st record is used
 
-    if lUseActualTime:
+    if lUse2DTime:
 
         (n2,nB) = np.shape(zTpos)
         if n2!=2 or nP!=nB:
             print('ERROR: wrong shape for the 2D time array `zTpos`! `n2,nB`, vs `nP`:',n2,nB,nP)
             exit(0)
-        print(' ==> ok, we got the 2 time positions for '+str(nB)+' buoys! (`lUseActualTime==True`)\n')
+        print(' ==> ok, we got the 2 time positions for '+str(nB)+' buoys! (`lUse2DTime==True`)\n')
         del nB
         
         zstarting_dates = np.unique( zTpos[0,:] )
@@ -326,7 +326,7 @@ if __name__ == '__main__':
     lStillIn = np.zeros(nP, dtype=bool) ; # tells if a buoy is still within expected mesh/cell..
 
     # Initial values for some arrays:
-    if lUseActualTime:
+    if lUse2DTime:
         xTime  = np.zeros((Nt+1,nP),dtype=int) + sit.FillValue ; # will contain the time of the model record used!!!
         for jb in range(nP):
             k0 = z1stModelRec[jb] - kstrt ; #fixme: it's only okay when dt_model=1h ???
@@ -340,7 +340,7 @@ if __name__ == '__main__':
         xmask[0,:,:] = 1
 
     if iplot>0 and idebug>0:
-        mjt.ShowBuoysMap( 0, xPosG0[:,1], xPosG0[:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+'_'+csfkm+'.png',
+        mjt.ShowBuoysMap( 0, xPosG0[:,1], xPosG0[:,0], cfig=cfdir+'/INIT_Pos_buoys_'+SeedBatch+'_'+ModExp+csfkm+'.png',
                           nmproj=name_proj, cnmfig=None, ms=5, ralpha=0.5, lShowDate=True, zoom=1., title='IceTracker: Init Seeding' ) ; #, pvIDs=IDs
 
     del xPosC0, xPosG0
@@ -455,7 +455,7 @@ if __name__ == '__main__':
                 xPosC[jt+1,jP,:] = [ ry_nxt, rx_nxt ]
                 xmask[jt+1,jP,:] = [    1  ,    1   ]
                 
-                if lUseActualTime:
+                if lUse2DTime:
                     xTime[jt+1,jP] = itime + rdt ; # at `jt+1`, time is itime+rdt ! (xTime[0,:] filled earlier)
                 
                 # Is it still inside our mesh:
@@ -508,7 +508,7 @@ if __name__ == '__main__':
     cdt1, cdt2 = str.replace( cdt1, '_', 'h') , str.replace( cdt2, '_', 'h')
     corgn = 'NEMO-SI3_'+ModConf+'_'+ModExp
 
-    if not lUseActualTime:
+    if not lUse2DTime:
         # Save series at each model time step:
         cf_nc_out = './nc/'+corgn+'_tracking_'+SeedBatch+cdtbin+'_'+cdt1+'_'+cdt2+csfkm+'.nc'
         kk = sit.ncSaveCloudBuoys( cf_nc_out, vTime, IDs, xPosC[:,:,0], xPosC[:,:,1], xPosG[:,:,0], xPosG[:,:,1],
@@ -516,11 +516,11 @@ if __name__ == '__main__':
 
 
 
-    # Now we should create the 2-record (initial and final) nc file (mandatory if `lUseActualTime` !):
+    # Now we should create the 2-record (initial and final) nc file (mandatory if `lUse2DTime` !):
 
     z2XY, z2GC, zMSK = np.zeros((2,nP,2)), np.zeros((2,nP,2)), np.zeros((2,nP,2),dtype='i1') ; # [record,n.buoys,yx]    
     
-    if lUseActualTime:
+    if lUse2DTime:
         
         if idebug>1:
             for jb in range(0,nP,10):
@@ -580,10 +580,11 @@ if __name__ == '__main__':
             del zLon, zLat
                 
 
-    if iplot>1:
+    if lplot:
+        print('\n *** Will now generate the maps!')
         # Show on the map of the Arctic:
         for jt in range(Nt+1):
-            if jt%isubsamp_fig == 0:
+            if jt%ifreq_plot == 0:
                 zLon = np.ma.masked_where( xmask[jt,:,1]==0, xPosG[jt,:,1] )
                 zLat = np.ma.masked_where( xmask[jt,:,0]==0, xPosG[jt,:,0] )
                 ctag = cdt1+'-'+cdt2+'_'+'%4.4i'%(jt)
