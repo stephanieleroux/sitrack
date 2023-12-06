@@ -33,4 +33,12 @@ A Lagrangian Sea-Ice Particule Tracker for SI3 (or any sea-ice GCM running on th
 This is done by means of script `tools/generate_idealized_seeding.py` of `sitrack` 
 
 * generate the seeding file that `si3_part_tracker.py` will use
-
+```
+./tools/generate_idealized_seeding.py -d '1996-12-15_00:00:00' \
+                                      -m /data/gcm_setup/sitrack_demo/NANUK4/mesh_mask_NANUK4_L31_4.2_1stLev.nc \
+                                      -i /data/gcm_setup/sitrack_demo/NANUK4/NANUK4-BBM23U06_1h_19961215_19970420_icemod.nc \
+                                      -k 0 \
+                                      -S 5 \
+                                      -f  /data/gcm_setup/sitrack_demo/NANUK4/mask_SeedInit_TrackIce_NANUK4.nc \
+                                      -N NANUK4
+```
