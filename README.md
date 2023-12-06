@@ -44,3 +44,9 @@ generate_idealized_seeding.py -d '1996-12-15_00:00:00' \
 Basically, we are telling `generate_idealized_seeding.py`:
 - the seeding occurs at `1996-12-15_00:00:00`
 - find SI3 coordinates, mask, metrics, etc, into `mesh_mask_NANUK4_L31_4.2_1stLev.nc`
+
+
+
+If it goes according to plan, you have obtained:
+- an image showing you the to-be-seeded virtual buoys on a map of the Arctic: `./figs/SEEDING/sitrack_seeding_nemoTsi3_19961215_00_HSS5.png`
+- the netCDF files do be used by `sitrack` that contains the location of virtual buoys to seed: `nc/sitrack_seeding_nemoTsi3_19961215_00_HSS5.nc`
