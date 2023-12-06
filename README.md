@@ -94,8 +94,7 @@ si3_part_tracker.py -i <PATH_TO_DEMO_DIR>/NANUK4/NANUK4-BBM23U06_1h_19961215_199
 - `-F`: all buoys use the same time axis
 - `-p 24`: tells `si3_part_tracker.py` to create an image of the positions of the buoys every 24 model records (_i.e._ hours)
 
-Trajectories of virtual buoys are saved into file:
-
+Trajectories of virtual buoys are saved into file:<br>
 `nc/NEMO-SI3_NANUK4_BBM23U06_tracking_nemoTsi3_idlSeed_19961215h00_19970420h00.nc`
 
 Maps showing the positions of the buoys are generated into the `figs/tracking/` directory.
