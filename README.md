@@ -42,11 +42,16 @@ generate_idealized_seeding.py -d '1996-12-15_00:00:00' \
                               -N NANUK4
 ```
 Basically, we are telling `generate_idealized_seeding.py`:
-- the seeding occurs at `1996-12-15_00:00:00`
-- find SI3 coordinates, mask, metrics, etc, into `mesh_mask_NANUK4_L31_4.2_1stLev.nc`
-
-
+- that the seeding occurs at `1996-12-15_00:00:00`
+- to find SI3 coordinates, mask, metrics, etc, into `mesh_mask_NANUK4_L31_4.2_1stLev.nc`
+- to use a sea-ice/open-ocean mask based on the sea-ice fraction  read in file `NANUK4-BBM23U06_1h_19961215_19970420_icemod.nc` at record `k=0`
+- to use a sub-sampling of 5 in terms of grid points
+- to restrict the seeding to the horizontal subdomain defined as a mask in file `NANUK4/mask_SeedInit_TrackIce_NANUK4.nc`
+- that the NEMO config is `NANUK4`
 
 If it goes according to plan, you have obtained:
 - an image showing you the to-be-seeded virtual buoys on a map of the Arctic: `./figs/SEEDING/sitrack_seeding_nemoTsi3_19961215_00_HSS5.png`
 - the netCDF files do be used by `sitrack` that contains the location of virtual buoys to seed: `nc/sitrack_seeding_nemoTsi3_19961215_00_HSS5.nc`
+
+
+
