@@ -10,7 +10,7 @@ A Lagrangian Sea-Ice Particule Tracker for SI3 (or any sea-ice GCM running on th
 ### Dependencies
 
 #### `mojito`
- * clone `mojito` into the `<somewhere>` directory on your computer 
+ * clone [`mojito`](https://github.com/brodeau/mojito) into the `<somewhere>` directory on your computer 
  ```
  cd <somewhere>/
  git clone git@github.com:brodeau/mojito.git
