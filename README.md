@@ -24,7 +24,7 @@ A Lagrangian Sea-Ice Particule Tracker for SI3 (or any sea-ice GCM running on th
 ### Getting started with `sitrack`
 
 * download and extract the tarball `sitrack_demo.tar` of the directory containing the netCDF files for the demo test: `sitrack_demo`
-* the absolute path to the content of this content is hereafter referred to as `<PATH_TO_DEMO_DIR>`
+* the absolute path to the content of this directory is hereafter referred to as `<PATH_TO_DEMO_DIR>`
 
 
 #### Generation of the seeding file (netCDF)
