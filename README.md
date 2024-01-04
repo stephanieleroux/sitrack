@@ -1,5 +1,6 @@
-# sitrack
+[![DOI](https://zenodo.org/badge/622954088.svg)](https://zenodo.org/badge/latestdoi/622954088)
 
+# sitrack
 
 A Lagrangian Sea-Ice Particule Tracker for SI3 (or any sea-ice GCM running on the Arakawa C-grid).
 
