@@ -4,7 +4,7 @@
 ##################################################################
 
 from sys import exit
-#from os import path ; #, mkdir
+#from os import path  #, mkdir
 import numpy as np
 
 

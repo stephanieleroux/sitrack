@@ -3,6 +3,7 @@ from sys import argv, exit
 from os import path ; #, environ, mkdir
 import numpy as np
 
+
 #from re import split
 from netCDF4 import Dataset
 
@@ -151,7 +152,7 @@ def ncSaveCloudBuoys( cf_out, ptime, pIDs, pY, pX, pLat, pLon, mask=[], xtime=[]
     # Variables:
     v_time = f_out.createVariable(cd_time,     'i4',(cd_time,))
     v_buoy = f_out.createVariable(cd_buoy,     'i4',(cd_buoy,))
-    v_bid  = f_out.createVariable('id_buoy',   'i4',(cd_buoy,))
+    v_bid  = f_out.createVariable('id_buoy',   'i8',(cd_buoy,))  # SLX: i changed the type from i4 to i8
     x_lat  = f_out.createVariable('latitude' , 'f4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
     x_lon  = f_out.createVariable('longitude', 'f4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
     x_ykm  = f_out.createVariable('y_pos' ,    'f4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
@@ -170,8 +171,9 @@ def ncSaveCloudBuoys( cf_out, ptime, pIDs, pY, pX, pLat, pLon, mask=[], xtime=[]
         x_tim  = f_out.createVariable('time_pos', 'i4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
         x_tim.units = tunits
     #
-    v_buoy[:] = np.arange(Nb,dtype='i4')
+    v_buoy[:] = np.arange(Nb,dtype='i8')
     v_bid[:]  = pIDs[:]
+    #print(v_buoy)
     #
     for jt in range(Nt):
         v_time[jt]  = ptime[jt]
@@ -191,6 +193,7 @@ def ncSaveCloudBuoys( cf_out, ptime, pIDs, pY, pX, pLat, pLon, mask=[], xtime=[]
     f_out.close()
     print('      ===> '+cf_out+' saved!')
     #
+    
     return 0
 
 def LoadNCtime( cfile, ltime2d=False, iverbose=0 ):
@@ -219,6 +222,7 @@ def LoadNCtime( cfile, ltime2d=False, iverbose=0 ):
         ztime = id_in.variables['time'][:]
 
         if ltime2d:
+            print("=============== should not be here !")
             if not 'time_pos' in list_var:
                 print(' ERROR [LoadNCtime()]: no variable `'+time_pos+'` found into input file!'); exit(0)
             ctunits = id_in.variables['time_pos'].units
@@ -378,4 +382,3 @@ def ModelFileTimeInfo( fModelNc, iverbose=0 ):
     #print(' Nt, ztime, idate0, idateN, nconf, nexpr =', Nt, ztime, idate0, idateN, nconf, nexpr); exit(0)
     #
     return Nt, ztime, idate0, idateN, nconf, nexpr
-

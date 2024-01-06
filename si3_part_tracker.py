@@ -23,9 +23,9 @@ import sitrack as sit
 
 
 idebug=0
-iplot=1
+iplot=0
 
-#lUse2DTime = True ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
+#lUse2DTime = False ; # => if set to True, each buoy will be tracked for the exact same amount of time as its RGPS counterpart
 #                       #    => otherwize, it is tracked for 3 days...
 
 rdt = 3600. ; #FIXME!!! time step [s] (must be that of model output ice velocities used)
@@ -116,7 +116,8 @@ if __name__ == '__main__':
     # Are we in a idealized seeding or not:
     fncSsplt = split('\.', fNCseedBN)[0]
     fncSsplt = split('_',fncSsplt)
-    if fncSsplt[2] in ['nemoTsi3','nemoTmm']:
+    print(fncSsplt[2])
+    if fncSsplt[2] in ['nemoTsi3','nemoTmm','sidfex']:
         print('\n *** Seems to be an idealized seeding of type "'+fncSsplt[2]+'"')
         cdtbin = '_idlSeed'        
         for ii in [1,2,3]:
@@ -148,8 +149,11 @@ if __name__ == '__main__':
     
     # Some strings and start/end date of Seeding input file:
     idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUse2DTime, iverbose=idebug )
+    print("====== SLX")
+    print(zTpos) 
 
-    # Same for model input file + time records info:
+
+   # Same for model input file + time records info:
     Nt0, ztime_model, idateModA, idateModB, ModConf, ModExp = sit.ModelFileTimeInfo( cf_uv, iverbose=idebug )
     
     # What records of model data can we use, based on time info from 2 input files above:
@@ -243,7 +247,7 @@ if __name__ == '__main__':
         if nPn<nP:
             print('\n *** `SeedInit()` had to cancel '+str(nP-nPn)+
                   ' buoys! => adjusting `zTpos` and updating nP from '+str(nP)+' to '+str(nPn)+'!')
-            zTpos = zTpos[:,idxK]
+            #zTpos = zTpos[:,idxK]
             nP = nPn
         
         # This first stage is fairly costly, so saving the info:
