@@ -118,7 +118,7 @@ if __name__ == '__main__':
             print('       ==> domain shape: Ny, Nx =', Ny,Nx,'\n')
 
 
-        xlat_t,xlon_t = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
+        xlat_t,xlon_t = np.zeros((Ny,Nx), dtype=np.double),np.zeros((Ny,Nx), dtype=np.double)
         xlat_t[:,:] = id_in.variables[cv_lat][:,:]
         xlon_t[:,:] = id_in.variables[cv_lon][:,:]
 
@@ -126,14 +126,14 @@ if __name__ == '__main__':
 
     print(' *** Allocating arrays...')
     # Geographic coordinates:
-    xlat_u,xlon_u = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
-    xlat_v,xlon_v = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
-    xlat_f,xlon_f = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    xlat_u,xlon_u = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
+    xlat_v,xlon_v = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
+    xlat_f,xlon_f = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
     # Cartesian coordinates:
-    xYkm_t,xXkm_t = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
-    xYkm_u,xXkm_u = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
-    xYkm_v,xXkm_v = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
-    xYkm_f,xXkm_f = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    xYkm_t,xXkm_t = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
+    xYkm_u,xXkm_u = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
+    xYkm_v,xXkm_v = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
+    xYkm_f,xXkm_f = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
     print('       .... done!\n')
 
 
@@ -189,45 +189,45 @@ if __name__ == '__main__':
     id_out.createDimension('y', Ny)
     id_out.createDimension('x', Nx)
     
-    id_lat_t  = id_out.createVariable( 'gphit' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lat_t  = id_out.createVariable( 'gphit' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lat_t[:,:] = xlat_t[:,:] ; id_lat_t.units = 'degrees_north'
-    id_lon_t  = id_out.createVariable( 'glamt' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lon_t  = id_out.createVariable( 'glamt' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lon_t[:,:] = xlon_t[:,:] ; id_lon_t.units = 'degrees_east'
     #
-    id_lat_u  = id_out.createVariable( 'gphiu' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lat_u  = id_out.createVariable( 'gphiu' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lat_u[:,:] = xlat_u[:,:] ; id_lat_u.units = 'degrees_north'
-    id_lon_u  = id_out.createVariable( 'glamu' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lon_u  = id_out.createVariable( 'glamu' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lon_u[:,:] = xlon_u[:,:] ; id_lon_u.units = 'degrees_east'    
     #
-    id_lat_v  = id_out.createVariable( 'gphiv' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lat_v  = id_out.createVariable( 'gphiv' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lat_v[:,:] = xlat_v[:,:] ; id_lat_v.units = 'degrees_north'
-    id_lon_v  = id_out.createVariable( 'glamv' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lon_v  = id_out.createVariable( 'glamv' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lon_v[:,:] = xlon_v[:,:] ; id_lon_v.units = 'degrees_east'
     #
-    id_lat_f  = id_out.createVariable( 'gphif' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lat_f  = id_out.createVariable( 'gphif' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lat_f[:,:] = xlat_f[:,:] ; id_lat_f.units = 'degrees_north'
-    id_lon_f  = id_out.createVariable( 'glamf' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_lon_f  = id_out.createVariable( 'glamf' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lon_f[:,:] = xlon_f[:,:] ; id_lon_f.units = 'degrees_east'
     #
     #
-    id_Ykm_t  = id_out.createVariable( 'ypos_t' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_t  = id_out.createVariable( 'ypos_t' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Ykm_t[:,:] = xYkm_t[:,:] ; id_Ykm_t.units = 'km'
-    id_Xkm_t  = id_out.createVariable( 'xpos_t' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_t  = id_out.createVariable( 'xpos_t' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Xkm_t[:,:] = xXkm_t[:,:] ; id_Xkm_t.units = 'km'
     #
-    id_Ykm_u  = id_out.createVariable( 'ypos_u' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_u  = id_out.createVariable( 'ypos_u' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Ykm_u[:,:] = xYkm_u[:,:] ; id_Ykm_u.units = 'km'
-    id_Xkm_u  = id_out.createVariable( 'xpos_u' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_u  = id_out.createVariable( 'xpos_u' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Xkm_u[:,:] = xXkm_u[:,:] ; id_Xkm_u.units = 'km'    
     #
-    id_Ykm_v  = id_out.createVariable( 'ypos_v' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_v  = id_out.createVariable( 'ypos_v' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Ykm_v[:,:] = xYkm_v[:,:] ; id_Ykm_v.units = 'km'
-    id_Xkm_v  = id_out.createVariable( 'xpos_v' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_v  = id_out.createVariable( 'xpos_v' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Xkm_v[:,:] = xXkm_v[:,:] ; id_Xkm_v.units = 'km'
     #
-    id_Ykm_f  = id_out.createVariable( 'ypos_f' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_f  = id_out.createVariable( 'ypos_f' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Ykm_f[:,:] = xYkm_f[:,:] ; id_Ykm_f.units = 'km'
-    id_Xkm_f  = id_out.createVariable( 'xpos_f' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_f  = id_out.createVariable( 'xpos_f' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Xkm_f[:,:] = xXkm_f[:,:] ; id_Xkm_f.units = 'km'
     #
     #
