@@ -17,6 +17,8 @@ from netCDF4 import Dataset
 #import mojito   as mjt
 import sitrack  as sit
 
+import climporn as cp
+
 #import random
 #from random import random, choices
 
@@ -135,13 +137,6 @@ if __name__ == '__main__':
     xYkm_v,xXkm_v = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
     xYkm_f,xXkm_f = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
     print('       .... done!\n')
-
-
-
-
-
-
-
     
     # Working with Cartesian coordinates:
     xYkm_t, xXkm_t = sit.ConvertGeo2CartesianNPSkm( xlat_t, xlon_t,  lat0=70., lon0=-45. )
@@ -236,7 +231,27 @@ if __name__ == '__main__':
 
     print('\n *** '+cf_out+' written!\n')
 
-    exit(0)
+
+
+
+    if iplot>0:
+
+        cfig = 'map'
+        isubsamp = 10
+        DPIsvg = 100
+        rLat0 = 75.
+        
+
+        ii = cp.PlotGridGlobe( xlon_f[:,:], xlat_f[:,:],
+                               chemi='N', lon0=-35., lat0=rLat0, cfig_name=cfig+'_NH_35W_f_OUT_ortho_WHITE.svg',
+                               nsubsamp=isubsamp, rdpi=DPIsvg, ldark=False )
+
+        ii = cp.PlotGridGlobe( xlon_f[:,:], xlat_f[:,:],
+                               chemi='N', lon0=130., lat0=rLat0, cfig_name=cfig+'_NH_130E_f_OUT_ortho_WHITE.svg',
+                               nsubsamp=isubsamp, rdpi=DPIsvg, ldark=False )
+
+        
+    
 
 
 
