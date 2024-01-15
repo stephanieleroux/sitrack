@@ -210,24 +210,24 @@ if __name__ == '__main__':
     id_lon_f[:,:] = xlon_f[:,:] ; id_lon_f.units = 'degrees_east'
     #
     #
-    id_Ykm_t  = id_out.createVariable( 'gphit' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_t  = id_out.createVariable( 'ypos_t' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Ykm_t[:,:] = xYkm_t[:,:] ; id_Ykm_t.units = 'km'
-    id_Xkm_t  = id_out.createVariable( 'glamt' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_t  = id_out.createVariable( 'xpos_t' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Xkm_t[:,:] = xXkm_t[:,:] ; id_Xkm_t.units = 'km'
     #
-    id_Ykm_u  = id_out.createVariable( 'gphiu' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_u  = id_out.createVariable( 'ypos_u' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Ykm_u[:,:] = xYkm_u[:,:] ; id_Ykm_u.units = 'km'
-    id_Xkm_u  = id_out.createVariable( 'glamu' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_u  = id_out.createVariable( 'xpos_u' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Xkm_u[:,:] = xXkm_u[:,:] ; id_Xkm_u.units = 'km'    
     #
-    id_Ykm_v  = id_out.createVariable( 'gphiv' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_v  = id_out.createVariable( 'ypos_v' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Ykm_v[:,:] = xYkm_v[:,:] ; id_Ykm_v.units = 'km'
-    id_Xkm_v  = id_out.createVariable( 'glamv' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_v  = id_out.createVariable( 'xpos_v' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Xkm_v[:,:] = xXkm_v[:,:] ; id_Xkm_v.units = 'km'
     #
-    id_Ykm_f  = id_out.createVariable( 'gphif' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_f  = id_out.createVariable( 'ypos_f' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Ykm_f[:,:] = xYkm_f[:,:] ; id_Ykm_f.units = 'km'
-    id_Xkm_f  = id_out.createVariable( 'glamf' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_f  = id_out.createVariable( 'xpos_f' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_Xkm_f[:,:] = xXkm_f[:,:] ; id_Xkm_f.units = 'km'
     #
     #
