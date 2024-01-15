@@ -73,7 +73,7 @@ def __argument_parsing__():
     # Optional:
     parser.add_argument('-x', '--nlon' , default='longitude',  help='name of longitude in input file (default="longitude")')
     parser.add_argument('-y', '--nlat' , default='latitude',   help='name of latitude in input file (default="latitude")')
-    parser.add_argument('-o', '--fout' , default='mesh.nc',    help='output file (default="mesh.nc")')
+    parser.add_argument('-o', '--fout' , default='coordinates_mesh.nc',    help='output file (default="coordinates_mesh.nc")')
     #
     args = parser.parse_args()
     #
@@ -208,6 +208,28 @@ if __name__ == '__main__':
     id_lat_f[:,:] = xlat_f[:,:] ; id_lat_f.units = 'degrees_north'
     id_lon_f  = id_out.createVariable( 'glamf' ,'f4',('y','x',), zlib=True, complevel=7 )
     id_lon_f[:,:] = xlon_f[:,:] ; id_lon_f.units = 'degrees_east'
+    #
+    #
+    id_Ykm_t  = id_out.createVariable( 'gphit' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_t[:,:] = xYkm_t[:,:] ; id_Ykm_t.units = 'km'
+    id_Xkm_t  = id_out.createVariable( 'glamt' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_t[:,:] = xXkm_t[:,:] ; id_Xkm_t.units = 'km'
+    #
+    id_Ykm_u  = id_out.createVariable( 'gphiu' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_u[:,:] = xYkm_u[:,:] ; id_Ykm_u.units = 'km'
+    id_Xkm_u  = id_out.createVariable( 'glamu' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_u[:,:] = xXkm_u[:,:] ; id_Xkm_u.units = 'km'    
+    #
+    id_Ykm_v  = id_out.createVariable( 'gphiv' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_v[:,:] = xYkm_v[:,:] ; id_Ykm_v.units = 'km'
+    id_Xkm_v  = id_out.createVariable( 'glamv' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_v[:,:] = xXkm_v[:,:] ; id_Xkm_v.units = 'km'
+    #
+    id_Ykm_f  = id_out.createVariable( 'gphif' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Ykm_f[:,:] = xYkm_f[:,:] ; id_Ykm_f.units = 'km'
+    id_Xkm_f  = id_out.createVariable( 'glamf' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_Xkm_f[:,:] = xXkm_f[:,:] ; id_Xkm_f.units = 'km'
+    #
     #
     id_out.about = '`lat_lon_to_mesh.py` of `sitrack`, based on file "'+cf_in+'"'
     id_out.close()
