@@ -34,6 +34,11 @@ toDegrees = 180./pi
 
 ifreq_plot = 24 ; # frequency, in terms of number of model records, we spawn a figure on the map (if idebug>2!!!)
 
+
+#GridType = 'C'
+GridType = 'A'
+
+
 iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
 #iUVstrategy = 0 ; #  What U,V should we use inside a given T-cell of the model?
 #                 #  * 0 => use the same MEAN velocity in the whole cell => U = 0.5*(U[j,i-1] + U[j,i]), V = 0.5*(V[j-1,i] + V[j,i])

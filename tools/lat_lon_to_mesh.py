@@ -175,6 +175,10 @@ if __name__ == '__main__':
     xlat_f, xlon_f = sit.ConvertCartesianNPSkm2Geo( xYkm_f, xXkm_f,  lat0=70., lon0=-45. )
 
 
+    print(' *** Computing e1t and e2t...')
+    xe2t, xe1t = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
+    xe2t[1:Ny,:] = 1000. * (xYkm_u[1:Ny,:] - xYkm_u[0:Ny-1,:]) # in m 
+    xe1t[:,1:Nx] = 1000. * (xXkm_u[:,1:Nx] - xXkm_u[:,0:Nx-1]) # in m 
 
 
     # Writing output file:
@@ -223,6 +227,12 @@ if __name__ == '__main__':
     id_Ykm_f[:,:] = xYkm_f[:,:] ; id_Ykm_f.units = 'km'
     id_Xkm_f  = id_out.createVariable( 'xpos_f' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_Xkm_f[:,:] = xXkm_f[:,:] ; id_Xkm_f.units = 'km'
+    #
+    #
+    id_e2t  = id_out.createVariable( 'e2t' ,'f8',('y','x',), zlib=True, complevel=7 )
+    id_e2t[:,:] = xe2t[:,:] ; id_e2t.units = 'm'
+    id_e1t  = id_out.createVariable( 'e1t' ,'f8',('y','x',), zlib=True, complevel=7 )
+    id_e1t[:,:] = xe1t[:,:] ; id_e1t.units = 'm'
     #
     #
     id_out.about = '`lat_lon_to_mesh.py` of `sitrack`, based on file "'+cf_in+'"'
