@@ -21,6 +21,8 @@ from netCDF4 import Dataset
 #from random import random, choices
 
 
+rmasked = -999.
+
 idebug=0
 iplot=1
 
@@ -79,16 +81,35 @@ if __name__ == '__main__':
             print('FIX ME: regular grid!'); exit(0)        
         print('       ==> domain shape: Ny, Nx =', Ny,Nx,'\n')
 
-        print(' *** Allocating arrays...')
-        xlat_t,xlon_t = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
-        xlat_u,xlon_u = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
-        xlat_v,xlon_v = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
-        xlat_f,xlon_f = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
-        print('       .... done!\n')
         
+        xlat_t,xlon_t = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
+        xlat_t[:,:] = id_in.variables[cv_lat][:,:]
+        xlon_t[:,:] = id_in.variables[cv_lon][:,:]
+        
+    ### closing `cf_in`...
+
+    print(' *** Allocating arrays...')
+    # Geographic coordinates:
+    xlat_u,xlon_u = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    xlat_v,xlon_v = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    xlat_f,xlon_f = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    # Cartesian coordinates:
+    xYkm_t,xXkm_t = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    xYkm_u,xXkm_u = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    xYkm_v,xXkm_v = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    xYkm_f,xXkm_f = np.zeros((Ny,Nx))+rmasked, np.zeros((Ny,Nx))+rmasked
+    print('       .... done!\n')
 
 
+    
+    # Constructing U-points:
+    xlat_u[:,0:Nx-1] = 0.5 * ( xlat_t[:,0:Nx-1] + xlat_t[:,1:Nx] )
+    xlon_u[:,0:Nx-1] = 0.5 * ( xlon_t[:,0:Nx-1] + xlon_t[:,1:Nx] )
 
+    # Constructing V-points:
+    xlat_v[0:Ny-1,:] = 0.5 * ( xlat_t[0:Ny-1,:] + xlat_t[1:Ny,:] )
+    xlon_v[0:Ny-1,:] = 0.5 * ( xlon_t[0:Ny-1,:] + xlon_t[1:Ny,:] )
+    
 
     
     exit(0)
