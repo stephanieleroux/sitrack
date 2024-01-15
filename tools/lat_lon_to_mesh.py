@@ -72,13 +72,14 @@ def __argument_parsing__():
     rqrdNam.add_argument('-i', '--fin' , required=True,        help='input file containg longitude and latitude arrays')
     #
     # Optional:
-    parser.add_argument('-x', '--nlon' , default='longitude',  help='name of longitude in input file (default="longitude")')
-    parser.add_argument('-y', '--nlat' , default='latitude',   help='name of latitude in input file (default="latitude")')
-    parser.add_argument('-o', '--fout' , default='coordinates_mesh.nc',    help='output file (default="coordinates_mesh.nc")')
+    parser.add_argument('-x', '--nlon'  , default='longitude',  help='name of longitude in input file (default="longitude")')
+    parser.add_argument('-y', '--nlat'  , default='latitude',   help='name of latitude in input file (default="latitude")')
+    parser.add_argument('-f', '--field' , default='siconc',     help='name of 2D field to get land-sea mask from")')
+    parser.add_argument('-o', '--fout'  , default='coordinates_mesh.nc',    help='output file (default="coordinates_mesh.nc")')
     #
     args = parser.parse_args()
     #
-    return args.fin, args.nlon, args.nlat, args.fout
+    return args.fin, args.nlon, args.nlat, args.field, args.fout
 
 
 
@@ -89,7 +90,7 @@ if __name__ == '__main__':
 
     print('')
 
-    cf_in, cv_lon, cv_lat, cf_out = __argument_parsing__()
+    cf_in, cv_lon, cv_lat, cv_field, cf_out = __argument_parsing__()
 
     print(' *** Input file: '+cf_in)
     print('                => name for longitude and latitude: "'+cv_lon+'", "'+cv_lat+'"\n')
@@ -123,8 +124,18 @@ if __name__ == '__main__':
         xlat_t[:,:] = id_in.variables[cv_lat][:,:]
         xlon_t[:,:] = id_in.variables[cv_lon][:,:]
 
+        xfield = np.zeros((Ny,Nx))
+        xfield[:,:] = id_in.variables[cv_field][0,:,:]
+
     ### closing `cf_in`...
 
+
+    print(' *** Creating land-sea mask based on masked values of field "'+cv_field+'"...')
+    imask = np.ones((Ny,Nx),dtype='int')
+    imask[np.where(xfield <1.e-4)] = 0
+    print(imask[::100,::100],'\n')
+
+    
     print(' *** Allocating arrays...')
     # Geographic coordinates:
     xlat_u,xlon_u = np.zeros((Ny,Nx), dtype=np.double)+rmasked, np.zeros((Ny,Nx), dtype=np.double)+rmasked
@@ -186,6 +197,10 @@ if __name__ == '__main__':
 
     id_out.createDimension('y', Ny)
     id_out.createDimension('x', Nx)
+
+
+    id_mskt  = id_out.createVariable( 'tmask' ,'f4',('y','x',), zlib=True, complevel=7 )
+    id_mskt[:,:] = imask[:,:].astype(np.single)
     
     id_lat_t  = id_out.createVariable( 'gphit' ,'f8',('y','x',), zlib=True, complevel=7 )
     id_lat_t[:,:] = xlat_t[:,:] ; id_lat_t.units = 'degrees_north'
