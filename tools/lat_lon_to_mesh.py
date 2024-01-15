@@ -12,6 +12,8 @@ from os import path, makedirs, environ
 import numpy as np
 from re import split
 
+from netCDF4 import Dataset
+
 #import mojito   as mjt
 #import sitrack  as sit
 
@@ -54,7 +56,41 @@ if __name__ == '__main__':
     cf_in, cv_lon, cv_lat = __argument_parsing__()
 
     print(' *** Input file: '+cf_in)
-    print('       => name for longitude and latitude: '+cv_lon+', '+cv_lat)
+    print('                => name for longitude and latitude: "'+cv_lon+'", "'+cv_lat+'"\n')
+
+    with Dataset(cf_in) as id_in:
+
+        shpLon, shpLat = id_in.variables[cv_lon].shape, id_in.variables[cv_lat].shape        
+        l_2d_coordinates = ( len(shpLon)==2 and len(shpLat)==2 )
+
+        if l_2d_coordinates:
+            if shpLon != shpLat :
+                print('ERROR: lon and lat variables are 2D and have different shapes!'); exit(0)
+            print(' *** Coordinates are 2D, irregular grid!')
+        elif ( len(shpLon)==1 and len(shpLat)==1 ):
+            print(' *** Coordinates are 1D, regular grid!')
+        else:
+            print('ERROR: could not figure out the shape of coordinates in inpute file...'); exit(0)
+            
+        (Ny,Nx) = shpLon
+        del shpLon, shpLat
+        if not l_2d_coordinates:
+            # Fix me! should be easy, just create 2D arrays out of the 1D arrays...
+            print('FIX ME: regular grid!'); exit(0)        
+        print('       ==> domain shape: Ny, Nx =', Ny,Nx,'\n')
+
+        print(' *** Allocating arrays...')
+        xlat_t,xlon_t = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
+        xlat_u,xlon_u = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
+        xlat_v,xlon_v = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
+        xlat_f,xlon_f = np.zeros((Ny,Nx)),np.zeros((Ny,Nx))
+        print('       .... done!\n')
+        
+
+
+
+
+    
     exit(0)
     
 
