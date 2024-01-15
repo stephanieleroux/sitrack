@@ -17,7 +17,6 @@ from netCDF4 import Dataset
 #import mojito   as mjt
 import sitrack  as sit
 
-import climporn as cp
 
 #import random
 #from random import random, choices
@@ -236,12 +235,13 @@ if __name__ == '__main__':
 
     if iplot>0:
 
+        import climporn as cp
+        
         cfig = 'map'
-        isubsamp = 10
+        isubsamp = 20
         DPIsvg = 100
         rLat0 = 75.
         
-
         ii = cp.PlotGridGlobe( xlon_f[:,:], xlat_f[:,:],
                                chemi='N', lon0=-35., lat0=rLat0, cfig_name=cfig+'_NH_35W_f_OUT_ortho_WHITE.svg',
                                nsubsamp=isubsamp, rdpi=DPIsvg, ldark=False )
