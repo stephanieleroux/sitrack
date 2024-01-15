@@ -237,17 +237,13 @@ if __name__ == '__main__':
 
         import climporn as cp
         
-        cfig = 'map'
+        cfig = 'map_mesh'
         isubsamp = 20
         DPIsvg = 100
         rLat0 = 75.
         
         ii = cp.PlotGridGlobe( xlon_f[:,:], xlat_f[:,:],
                                chemi='N', lon0=-35., lat0=rLat0, cfig_name=cfig+'_NH_35W_f_OUT_ortho_WHITE.svg',
-                               nsubsamp=isubsamp, rdpi=DPIsvg, ldark=False )
-
-        ii = cp.PlotGridGlobe( xlon_f[:,:], xlat_f[:,:],
-                               chemi='N', lon0=130., lat0=rLat0, cfig_name=cfig+'_NH_130E_f_OUT_ortho_WHITE.svg',
                                nsubsamp=isubsamp, rdpi=DPIsvg, ldark=False )
 
         
