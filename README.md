@@ -33,8 +33,7 @@ This is done by means of script `tools/generate_idealized_seeding.py` of `sitrac
 generate_idealized_seeding.py -d '1996-12-15_00:00:00' \
                               -m <PATH_TO_DEMO_DIR>/NANUK4/mesh_mask_NANUK4_L31_4.2_1stLev.nc \
                               -i <PATH_TO_DEMO_DIR>/NANUK4/NANUK4-BBM23U06_1h_19961215_19970420_icemod.nc \
-                              -k 0 \
-                              -S 5 \
+                              -k 0 -S 5 \
                               -f  <PATH_TO_DEMO_DIR>/NANUK4/mask_SeedInit_TrackIce_NANUK4.nc \
                               -N NANUK4
 ```
@@ -99,18 +98,24 @@ Maps showing the positions of the buoys are generated into the `figs/tracking/` 
 
 
 
-### In progress: CMEMS / NEXTSIM-F data files
+### In progress: using CMEMS / NEXTSIM-F data files:
 
 ```
-~/DEV/sitrack/si3_part_tracker.py -i 20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc -m coordinates_meshmask.nc  -s sitrack_seeding_debug_20240110_00.nc -k 0 -R 3 -S 2 -u vxsi -v vysi
+./si3_part_tracker.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc \
+                      -m <path_data>/coordinates_meshmask.nc \
+                      -s ./nc/sitrack_seeding_debug_20240110_00.nc \
+                      -R 3 -S 2 -u vxsi -v vysi -p 3
 ```
 
 `coordinates_meshmask.nc` created with:
+
+
 ```
-./tools/xy_arctic_to_meshmask.py -i 20240112_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc
+./tools/xy_arctic_to_meshmask.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc
 ```
 
 `sitrack_seeding_debug_20240110_00.nc` created with:
+
 ```
 ./tools/generate_idealized_seeding.py -d 2024-01-10_00:30:00
 ```

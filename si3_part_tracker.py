@@ -32,12 +32,7 @@ rdt = 3600. ; #FIXME!!! time step [s] (must be that of model output ice velociti
 
 toDegrees = 180./pi
 
-ifreq_plot = 24 ; # frequency, in terms of number of model records, we spawn a figure on the map (if idebug>2!!!)
-
-
-#GridType = 'C'
-GridType = 'A'
-
+ifreq_plot = 12 ; # frequency, in terms of number of model records, we spawn a figure on the map (if idebug>2!!!)
 
 
 # iUVstrategy  #  What U,V should we use inside a given T-cell of the model?
@@ -63,7 +58,6 @@ def __argument_parsing__():
     #
     parser.add_argument('-k', '--krec' , type=int, default=0,  help='record of seeding file to use to seed from')
     parser.add_argument('-e', '--dend' , default=None,         help='date at which to stop')
-    #parser.add_argument('-F', '--fxdt',  action="store_true",  help='fixed tracking time (1D time array)')
     parser.add_argument('-F', '--fxdt',  action=ap.BooleanOptionalAction)
     parser.add_argument('-N', '--ncnf' , default='NANUK4',     help='name of the horizontak NEMO config used')
     parser.add_argument('-p', '--plot' , type=int, default=0,  help='how often, in terms of model records, we plot the positions on a map')
@@ -183,7 +177,7 @@ if __name__ == '__main__':
     crk = creskm
     cc = split('-',creskm)
     if len(cc)==2: crk = cc[1]
-    cfdir = './figs/tracking/'+crk    
+    cfdir = './figs/tracking/'+crk+'km'   
     if iplot>0 and not path.exists(cfdir):
         makedirs( cfdir, exist_ok=True )
     for cd in [ 'seed', 'nc', 'npz' ]:
@@ -378,7 +372,7 @@ if __name__ == '__main__':
         itmod = ztime_mod[jrec]; # time of model data (center of the average period which should = rdt)
         itime = itmod - int(rdt/2.) ; # velocitie is average under the whole rdt, at the center!
         ctime = e2c(itime)
-        print('\n *** Reading record #'+str(jrec+1)+'/'+str(Nt0)+' in SI3 file ==> date =',
+        print('\n *** Reading record #'+str(jrec+1)+'/'+str(Nt0)+' in input file ==> date =',
               ctime,'(model:'+e2c(itmod)+')')
         vTime[jt] = itime
 
