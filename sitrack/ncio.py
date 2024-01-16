@@ -18,26 +18,68 @@ list_required_var_RGPS = [ 'index', 'x', 'y', 'lon', 'lat', 'time', 'idstream', 
 FillValue = -9999.
 
 
+def GetNameTimeDim( fnc_hndl ):
+    '''
+    * fnc_hndl: netCDF file handle !
+    '''
+    list_dim = list(fnc_hndl.dimensions.keys())
+    for cdim in [ 'time_counter', 'time', None ]:
+        if cdim in list_dim: break
+    if cdim: print('    * [GetNameTimeDim]:    => time is called: "'+cdim+'"')
+    return cdim
+
+
+def ConvertTimeToEpoch( vtime, units, calendar ):
+    '''
+    Convert a time 1D array with unexpected units, such as "days since ..." to a 1D array of UNIX aka Epoch time (seconds since 1970-01-01_00:00:00)
+    '''
+    from netCDF4  import num2date
+    from calendar import timegm
+    #
+    time_convert = num2date( vtime[:], units, calendar) ; # converts to to python datetime object!
+    zepoch = []    
+    for tt in time_convert:
+        zepoch.append(timegm(tt.timetuple()))
+    #
+    return np.array( zepoch , dtype='i4' )
+
+    
+
 def GetModelGrid( fNCmeshmask, alsoF=False ):
 
     chck4f( fNCmeshmask)
 
     # Reading mesh metrics into mesh-mask file:
     with Dataset(fNCmeshmask) as id_mm:
-        kmaskt = id_mm.variables['tmask'][0,0,:,:]
-        zlonF  = id_mm.variables['glamf'][0,:,:]
-        zlatF  = id_mm.variables['gphif'][0,:,:]
-        zlonT  = id_mm.variables['glamt'][0,:,:]
-        zlatT  = id_mm.variables['gphit'][0,:,:]
-        ze1T   = id_mm.variables['e1t'][0,:,:] / 1000. ; # km
-        ze2T   = id_mm.variables['e2t'][0,:,:] / 1000. ; # km
-        if alsoF:
-            kmaskf = id_mm.variables['fmask'][0,0,:,:]
-
+        ndim = len(id_mm.variables['glamt'].shape)
+        if ndim==2:
+            kmaskt = id_mm.variables['tmask'][:,:]
+            zlonF  = id_mm.variables['glamf'][:,:]
+            zlatF  = id_mm.variables['gphif'][:,:]
+            zlonT  = id_mm.variables['glamt'][:,:]
+            zlatT  = id_mm.variables['gphit'][:,:]
+            ze1T   = id_mm.variables['e1t'][:,:] / 1000. ; # km
+            ze2T   = id_mm.variables['e2t'][:,:] / 1000. ; # km
+            if alsoF:
+                kmaskf = id_mm.variables['fmask'][:,:]
+            #
+        elif ndim==4:
+            kmaskt = id_mm.variables['tmask'][0,0,:,:]
+            zlonF  = id_mm.variables['glamf'][0,:,:]
+            zlatF  = id_mm.variables['gphif'][0,:,:]
+            zlonT  = id_mm.variables['glamt'][0,:,:]
+            zlatT  = id_mm.variables['gphit'][0,:,:]
+            ze1T   = id_mm.variables['e1t'][0,:,:] / 1000. ; # km
+            ze2T   = id_mm.variables['e2t'][0,:,:] / 1000. ; # km
+            if alsoF:
+                kmaskf = id_mm.variables['fmask'][0,0,:,:]
+        else:
+            print(' ERROR [GetModelGrid]: unexpected number of dimmensions for variable `glamt` !')
+            exit(0)
+    #
     (nj,ni) = np.shape(kmaskt)
 
     kmaskt = np.array(kmaskt, dtype='i1')
-
 
     zXt = np.zeros((nj,ni))
     zYt = np.zeros((nj,ni))
@@ -234,7 +276,7 @@ def LoadNCtime( cfile, ltime2d=False, iverbose=0 ):
         else:
             return Nt, ztime
 
-
+#time_pos:lolo
 
 def LoadNCdata( cfile, krec=-1, lmask=False, lGetTimePos=False, iverbose=0 ):
     '''
@@ -340,10 +382,16 @@ def SeedFileTimeInfo( fSeedNc, ltime2d=False, iverbose=0 ):
         idate0, idateN = zt[0], zt[ntr-1]
         zt2d = []
     #
-    print('    * [SeedFileTimeInfo] => earliest and latest time position in the SEED file: '+e2c(idate0)+' - '+e2c(idateN))
-    # Generous rounding at the hour sharp:
-    idate0, idateN = int( floor(idate0/3600.)*3600. ), int( ceil(idateN/3600.)*3600. )
-    print('    * [SeedFileTimeInfo]  ==> will actually use rounded to the hour! => '+e2c(idate0)+' - '+e2c(idateN))
+    if ntr>1:
+        print('    * [SeedFileTimeInfo] => earliest and latest time position in the SEED file: '+e2c(idate0)+' - '+e2c(idateN))
+        # Generous rounding at the hour sharp:
+        idate0, idateN = int( floor(idate0/3600.)*3600. ), int( ceil(idateN/3600.)*3600. )
+        print('    * [SeedFileTimeInfo]  ==> will actually use rounded to the hour! => '+e2c(idate0)+' - '+e2c(idateN))
+    elif ntr==1:
+        print('    * [SeedFileTimeInfo] => only 1 time record in the SEED file! time = ', e2c(idate0))
+        idateN = idate0 ; # just to be sure
+    else:
+        print('ERROR [SeedFileTimeInfo]: problem!'); exit(0)
     #
     return idate0, idateN, cSeed, cBtch, zt2d
 
@@ -354,11 +402,16 @@ def ModelFileTimeInfo( fModelNc, iverbose=0 ):
     from re import split
     #
     with Dataset(fModelNc) as ds_mod:
-        Nt = ds_mod.dimensions['time_counter'].size
-        if ds_mod.variables['time_counter'].units != tunits_default:
-            print('ERROR: wrong units for time calendar in file:',fModelNc)
-            exit(0)
-        ztime = np.array( ds_mod.variables['time_counter'][:] , dtype='i4' )
+        cv_t = GetNameTimeDim( ds_mod ) ; # find the name for time/calendar vector:
+        #
+        Nt = ds_mod.dimensions[cv_t].size
+        if ds_mod.variables[cv_t].units != tunits_default:
+            print('    * [ModelFileTimeInfo] => "'+ds_mod.variables[cv_t].units+'" is the units for time in file',fModelNc)
+            print('                          ==> need to convert to '+tunits_default+' !')
+            time0 = ds_mod.variables[cv_t]
+            ztime = ConvertTimeToEpoch(time0[:], time0.units, time0.calendar )
+        else:
+            ztime = np.array( ds_mod.variables[cv_t][:] , dtype='i4' )
     #
     print('    * [ModelFileTimeInfo] => '+str(Nt)+' records in input MODEL file!')
     #
@@ -373,7 +426,7 @@ def ModelFileTimeInfo( fModelNc, iverbose=0 ):
         zz = split('-',vn[0])
         nconf = zz[0]
     nexpr = zz[1]
-    print('    * [ModelFileTimeInfo] => NEMO config and experiment =', nconf, nexpr, '\n')
+    print('    * [ModelFileTimeInfo] => Strings for `config` and `experiment` =>', nconf, nexpr, '\n')
     #    
     #print(' Nt, ztime, idate0, idateN, nconf, nexpr =', Nt, ztime, idate0, idateN, nconf, nexpr); exit(0)
     #

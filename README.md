@@ -95,3 +95,22 @@ Trajectories of virtual buoys are saved into file:<br>
 `nc/NEMO-SI3_NANUK4_BBM23U06_tracking_nemoTsi3_idlSeed_19961215h00_19970420h00.nc`
 
 Maps showing the positions of the buoys are generated into the `figs/tracking/` directory.
+
+
+
+
+### In progress: CMEMS / NEXTSIM-F data files
+
+```
+~/DEV/sitrack/si3_part_tracker.py -i 20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc -m coordinates_meshmask.nc  -s sitrack_seeding_debug_20240110_00.nc -k 0 -R 3 -S 2 -u vxsi -v vysi
+```
+
+`coordinates_meshmask.nc` created with:
+```
+./tools/xy_arctic_to_meshmask.py -i 20240112_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc
+```
+
+`sitrack_seeding_debug_20240110_00.nc` created with:
+```
+./tools/generate_idealized_seeding.py -d 2024-01-10_00:30:00
+```

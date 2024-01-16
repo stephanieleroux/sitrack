@@ -10,8 +10,9 @@ def GetTimeSpan( dt, vtime_mod, iSdA, iMdA, iMdB, iStop=None, iverbose=0 ):
          * iStop: date at which to stop !
                   => if not provided we stop at latest model date!!!
     '''
-    ltStop = ( iStop )
-    #    
+    ltStop = False
+    if iStop: ltStop = True
+
     # Confrontation of time info seeding and model:
     from .util import epoch2clock as e2c
     #
@@ -22,14 +23,15 @@ def GetTimeSpan( dt, vtime_mod, iSdA, iMdA, iMdB, iStop=None, iverbose=0 ):
     kt0 = np.argmin(np.abs(vtime_mod[:]-iSdA))
     if iSdA >= vtime_mod[kt0]: kt0 += 1
     itM0 = vtime_mod[kt0]
-    print('    * [GetTimeSpan]: First record needed =',kt0,'of SI3 file =>',e2c(itM0))
+    print('    * [GetTimeSpan]: First record needed =',kt0,'of model input file =>',e2c(itM0))
     #
     if ltStop:
         ktN = np.argmin(np.abs(vtime_mod[:]-iStop))
     else:
         ktN = len(vtime_mod) - 1
+    #
     itMN = vtime_mod[ktN]
-    print('    * [GetTimeSpan]: Last record needed =',ktN,'of SI3 file =>',e2c(itMN))
+    print('    * [GetTimeSpan]: Last record needed =',ktN,'of model input file =>',e2c(itMN))
     Nt = ktN - kt0 + 1
     print('       ==> '+str(Nt)+' model records')
     print('       ==> that makes '+str(round((itMN-itM0)/(3600*24),3))+' days of ice particule tracking.')

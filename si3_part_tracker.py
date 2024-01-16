@@ -39,10 +39,11 @@ ifreq_plot = 24 ; # frequency, in terms of number of model records, we spawn a f
 GridType = 'A'
 
 
-iUVstrategy = 1 ; #  What U,V should we use inside a given T-cell of the model?
-#iUVstrategy = 0 ; #  What U,V should we use inside a given T-cell of the model?
-#                 #  * 0 => use the same MEAN velocity in the whole cell => U = 0.5*(U[j,i-1] + U[j,i]), V = 0.5*(V[j-1,i] + V[j,i])
-#                 #  * 1 => use the same NEAREST velocity in the whole cell => U = U[@ nearest U-point], V = V[@ nearest V-point]
+
+# iUVstrategy  #  What U,V should we use inside a given T-cell of the model?
+#              #  * 0 => C-grid => use the same MEAN velocity in the whole cell => U = 0.5*(U[j,i-1] + U[j,i]), V = 0.5*(V[j-1,i] + V[j,i])
+#              #  * 1 => C-grid => use the same NEAREST velocity in the whole cell => U = U[@ nearest U-point], V = V[@ nearest V-point]
+#              #  * 2 => A-grid => use the same MEAN velocity in the whole cell, the one given at the center of the point...
 
 def __argument_parsing__():
     '''
@@ -51,17 +52,24 @@ def __argument_parsing__():
     import argparse as ap
     global lUse2DTime
     #
+    lUse2DTime = False ; # what you want in most of the cases... (not RGPS data though)
+    #
     parser = ap.ArgumentParser(description='SITRACK ICE PARTICULES TRACKER')
     rqrdNam = parser.add_argument_group('required arguments')
     rqrdNam.add_argument('-i', '--fsi3', required=True,  help='output file of SI3 containing ice velocities ans co')
     rqrdNam.add_argument('-m', '--fmmm', required=True, help='model `mesh_mask` file of NEMO config used in SI3 run')
     rqrdNam.add_argument('-s', '--fsdg', required=True,  help='seeding file')
+    rqrdNam.add_argument('-S', '--istr', required=True, type=int, help='strategy for chosing what velocity vector we use within the cell (iUVstrategy)')
     #
     parser.add_argument('-k', '--krec' , type=int, default=0,  help='record of seeding file to use to seed from')
     parser.add_argument('-e', '--dend' , default=None,         help='date at which to stop')
-    parser.add_argument('-F', '--fxdt',  action="store_true",  help='fixed tracking time (1D time array)')
+    #parser.add_argument('-F', '--fxdt',  action="store_true",  help='fixed tracking time (1D time array)')
+    parser.add_argument('-F', '--fxdt',  action=ap.BooleanOptionalAction)
     parser.add_argument('-N', '--ncnf' , default='NANUK4',     help='name of the horizontak NEMO config used')
     parser.add_argument('-p', '--plot' , type=int, default=0,  help='how often, in terms of model records, we plot the positions on a map')
+    parser.add_argument('-R', '--hres' , type=int, default=20, help='horizontal resolution of the grid [km] (default=20km)')
+    parser.add_argument('-u', '--uname' , default='u_ice',     help='name of U-velocity component in inpute file (default: u_ice)')
+    parser.add_argument('-v', '--vname' , default='v_ice',     help='name of V-velocity component in inpute file (default: v_ice)')
     #
     args = parser.parse_args()
     print('')
@@ -73,9 +81,9 @@ def __argument_parsing__():
     if args.ncnf:
         print(' *** Name of the horizontak NEMO config used => ', args.ncnf)
     #
-    lUse2DTime = not args.fxdt
-    
-    return args.fsi3, args.fmmm, args.fsdg, args.krec, args.dend, args.ncnf, args.plot
+    if args.fxdt: lUse2DTime = args.fxdt
+    #
+    return args.fsi3, args.fmmm, args.fsdg, args.istr, args.krec, args.dend, args.ncnf, args.plot, args.hres, args.uname, args.vname
 
 
 
@@ -88,7 +96,7 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, jrecSeed, cdate_stop, CONF, ifreq_plot = __argument_parsing__()
+    cf_uv, cf_mm, fNCseed, iUVstrategy, jrecSeed, cdate_stop, CONF, ifreq_plot, ireskm, cv_u, cv_v = __argument_parsing__()
 
     print(' lUse2DTime =',lUse2DTime)
     print('cf_uv =',cf_uv)
@@ -101,6 +109,11 @@ if __name__ == '__main__':
         print('cdate_stop =',cdate_stop)
     print('\n')
 
+    if not iUVstrategy in [0,1,2]:
+        print('ERROR: `iUVstrategy` with a value of '+str(iUVstrategy)+' is unknown!')
+        exit(0)
+
+    
     fNCseedBN = path.basename(fNCseed)
 
     if iplot>0:
@@ -112,50 +125,30 @@ if __name__ == '__main__':
             print('ERROR: CONF "'+CONF+'" is unknown (to know what proj to use for plots...)')
             exit(0)
 
+    # Nominal horizontal resolution:
+    creskm = str(ireskm)
+    print(' * Horizontal resolution of the grid (as specified at command line): '+creskm+' km')
+    csfkm = '_'+creskm+'km'
+
+    cdtbin = '_'+str(int(rdt/3600.))+'h'
+    
+     
     lplot = (ifreq_plot>0)
     if lplot:
-        print(' *** We shall plot a map with the position of virtual buoys every '+str(ifreq_plot)+' model records => '+str(int(rdt)*ifreq_plot/3600)+' hours')
+        print(' *** We shall plot a map with the position of virtual buoys every '
+              +str(ifreq_plot)+' model records => '+str(int(rdt)*ifreq_plot/3600)+' hours')
 
-
-    csfkm, creskm = '', ''
-    # Are we in a idealized seeding or not:
-    fncSsplt = split('\.', fNCseedBN)[0]
-    fncSsplt = split('_',fncSsplt)
-    if fncSsplt[2] in ['nemoTsi3','nemoTmm']:
-        print('\n *** Seems to be an idealized seeding of type "'+fncSsplt[2]+'"')
-        cdtbin = '_idlSeed'        
-        for ii in [1,2,3]:
-            ckm = '_'+fncSsplt[-ii]
-            if ckm[-2:]=='km':
-                csfkm = ckm
-                break
-        #
-    else:
-        # Info about resolution from the seeding file name?
-        lok=False
-        itst=1        
-        while not lok:
-            itst-=1
-            csfkm = '_'+split( '_', split('\.',fNCseedBN)[-2] )[itst]
-            kres=-3+itst            
-            cdtbin = '_'+split( '_', split('\.',fNCseedBN)[-2] )[kres]
-            lok = ( csfkm[-2:]=='km' and cdtbin[1:3]=='dt' ) or ( cdtbin[1:3]=='dt' and itst==0 )
-            if itst<-4:
-                print('ERROR: we could not figure out `csfkm` and `cdtbin` from file name!',csfkm, cdtbin); exit(0)
-        if itst==0: csfkm = ''
-
-
-    if csfkm != '':
-        creskm = csfkm[1:]
-        print(' *** The spatial resolution and dt_bin infered from file name: '+creskm+', '+cdtbin)
-    else:
-        creskm = ''
+    print('')
     
     # Some strings and start/end date of Seeding input file:
     idateSeedA, idateSeedB, SeedName, SeedBatch, zTpos = sit.SeedFileTimeInfo( fNCseed, ltime2d=lUse2DTime, iverbose=idebug )
 
+    print('')
+
+    
     # Same for model input file + time records info:
     Nt0, ztime_model, idateModA, idateModB, ModConf, ModExp = sit.ModelFileTimeInfo( cf_uv, iverbose=idebug )
+
     
     # What records of model data can we use, based on time info from 2 input files above:
     date_stop = None
@@ -165,17 +158,24 @@ if __name__ == '__main__':
             date_stop = mjt.clock2epoch( cdate_stop )
         else:
             date_stop = mjt.clock2epoch( cdate_stop, precision='D', cfrmt='guess' )
-        
+
+    elif idateSeedB == idateSeedA:
+        # => Only 1 time record in seeding file, we assume that we shoud run until the last record found into input data:
+        date_stop = idateModB + rdt/2
+        #
     elif idateSeedB - idateSeedA >= 3600.:
         # => there are more than 1 record in the file we use for seeding!!!
         #    ==> which means we are likely to do replicate the exact same thing using the model data
         #    ==> so we stop at `idateSeedB` !!!
         date_stop = idateSeedB
+        print("Nuh! idateSeedB, idateSeedA =", idateSeedB, idateSeedA)
     
-        
-    #
+    date_stop = int(date_stop)    
+    print(' *** Date at which the tracking should be stopped: '+e2c(date_stop)+'\n')
+    
     Nt, kstrt, kstop, iTmA, iTmB = sit.GetTimeSpan( rdt, ztime_model, idateSeedA, idateModA, idateModB , iStop=date_stop )
-    #
+    #                                  GetTimeSpan( dt, vtime_mod, iSdA, iMdA, iMdB, iStop=None, iverbose=0 )
+    
     if Nt<1:
         print(' QUITTING since no matching model records!')
         exit(0)
@@ -191,6 +191,7 @@ if __name__ == '__main__':
 
     # Getting model grid metrics and friends:
     imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = sit.GetModelGrid( cf_mm )
+
 
     if iUVstrategy==1:
         # Get extra U,V-point metrics:
@@ -244,13 +245,13 @@ if __name__ == '__main__':
         nPn, xPosG0, xPosC0, IDs, vJIt, VRTCS, idxK = sit.SeedInit( IDs, XseedG, XseedC, xlatT, xlonT, xYf, xXf,
                                                                     xResKM, imaskt, xIceConc=xIC, iverbose=idebug )
         del XseedG, XseedC
-
+        
         if nPn<nP:
             print('\n *** `SeedInit()` had to cancel '+str(nP-nPn)+
                   ' buoys! => adjusting `zTpos` and updating nP from '+str(nP)+' to '+str(nPn)+'!')
-            zTpos = zTpos[:,idxK]
+            if lUse2DTime: zTpos = zTpos[:,idxK]
             nP = nPn
-        
+            
         # This first stage is fairly costly, so saving the info:
         print('\n *** Saving intermediate data into '+cf_npz_itm+'!')
         np.savez_compressed( cf_npz_itm, nP=nP, xPosG0=xPosG0, xPosC0=xPosC0, IDs=IDs, vJIt=vJIt, VRTCS=VRTCS, idxKeep=idxK )
@@ -259,6 +260,7 @@ if __name__ == '__main__':
     
     del xResKM
 
+    
     
     # ========= Should be an external function ===================================================
     # What is the first and last model record to use for each buoy:
@@ -352,18 +354,28 @@ if __name__ == '__main__':
 
 
 
+
+    # Open Input data file:
+    ds_UVmod = Dataset(cf_uv)
+
+    # Get time vector in the file, and convert to Epoch time if needed:
+    cv_t   = sit.GetNameTimeDim( ds_UVmod )
+    ztime0 = ds_UVmod.variables[cv_t]
+    if ztime0.units != sit.tunits_default:
+        ztime_mod = sit.ConvertTimeToEpoch( ztime0[:], ztime0.units, ztime0.calendar )
+    else:
+        ztime_mod = np.array( ztime0[:] , dtype='i4' )
+    del ztime0
+
     ######################################
     # Loop along model data time records #
     ######################################
-
-    # Open Input SI3 data file
-    ds_UVmod = Dataset(cf_uv)
-
+    
     for jt in range(Nt):
 
         jrec = jt + kstrt ; # access into netCDF file...
 
-        itmod = int( ds_UVmod.variables['time_counter'][jrec] ); # time of model data (center of the average period which should = rdt)
+        itmod = ztime_mod[jrec]; # time of model data (center of the average period which should = rdt)
         itime = itmod - int(rdt/2.) ; # velocitie is average under the whole rdt, at the center!
         ctime = e2c(itime)
         print('\n *** Reading record #'+str(jrec+1)+'/'+str(Nt0)+' in SI3 file ==> date =',
@@ -371,8 +383,8 @@ if __name__ == '__main__':
         vTime[jt] = itime
 
         xIC[:,:] = ds_UVmod.variables['siconc'][jrec,:,:]
-        xUu[:,:] = ds_UVmod.variables['u_ice'][jrec,:,:]
-        xVv[:,:] = ds_UVmod.variables['v_ice'][jrec,:,:]
+        xUu[:,:] = ds_UVmod.variables[cv_u][jrec,:,:]
+        xVv[:,:] = ds_UVmod.variables[cv_v][jrec,:,:]
 
         print('   *   current number of buoys alive = '+str(iAlive.sum()))
 
@@ -444,7 +456,13 @@ if __name__ == '__main__':
                         print( ' ++ Buoy position is:',ry,rx)
                         print( ' ++ position of lhs & rhs U-point:',xYu[jT,iT-1],xXu[jT,iT-1], xYu[jT,iT],xXu[jT,iT], ' llum1=',llum1)
                         print( ' ++ position of lower & upper V-point:',xYv[jT,iT-1],xXv[jT,iT-1], xYv[jT,iT],xXv[jT,iT], ' llvm1=',llvm1)
+                        #
+                elif iUVstrategy == 2:
+                    # A-grid, easy!!!
+                    zU = xUu[jT,iT]
+                    zV = xVv[jT,iT]
 
+                        
                 if idebug>0:
                     print('    =>> read velocity at ji,jj=',iT,jT)
                     print('    * ice velocity of the mesh: u,v =',zU, zV, 'm/s')
