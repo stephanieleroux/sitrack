@@ -208,7 +208,7 @@ if __name__ == '__main__':
     ###
     print('')
 
-    print(' *** Converting back to Geographic coordinates, with lat0='+str(rlat0)+', lon0='+str(rlon0)+' !')
+    print(' *** Projecting all Cartesian coordinates to Geographic coordinates, with lat0='+str(rlat0)+', lon0='+str(rlon0)+' !')
     xlat_t, xlon_t = sit.ConvertCartesianNPSkm2Geo( xYkm_t, xXkm_t,  lat0=rlat0, lon0=rlon0 )
     xlat_u, xlon_u = sit.ConvertCartesianNPSkm2Geo( xYkm_u, xXkm_u,  lat0=rlat0, lon0=rlon0 )
     xlat_v, xlon_v = sit.ConvertCartesianNPSkm2Geo( xYkm_v, xXkm_v,  lat0=rlat0, lon0=rlon0 )
