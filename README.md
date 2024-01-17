@@ -90,7 +90,7 @@ si3_part_tracker.py -i <PATH_TO_DEMO_DIR>/NANUK4/NANUK4-BBM23U06_1h_19961215_199
 ```
 - `-s`: specifies the seeding file to use
 - `-e`: specifies the end date
-- `-p 24`: tells `si3_part_tracker.py` to create an image of the positions of the buoys every 24 model records  (_i.e._ daily in this case)
+- `-p 24`: create an image of the positions of the buoys every 24 model records  (_i.e._ daily in this case)
 
 Trajectories of virtual buoys are saved into file:<br>
 `nc/NEMO-SI3_NANUK4_BBM23U06_tracking_nemoTsi3_idlSeed_19961215h00_19970420h00.nc`
@@ -130,5 +130,5 @@ Now you can run the tracking of these buoys:
 - `-g A`: input data is on the A-grid, not a C-grid as for SI3 data
 - `-R 3`: nominal spatial resolution of the input data is 3 km
 - `-u vxsi -v vysi`: name of `u,v` into into input netCDF file
-- `-p 12`: tells `si3_part_tracker.py` to create an image of the positions of the buoys every 12 model records (_i.e._ 12 hours in this case)
+- `-p 12`: create an image of the positions of the buoys every 12 model records (_i.e._ 12 hours in this case)
 
