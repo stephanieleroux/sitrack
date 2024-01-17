@@ -104,9 +104,9 @@ Maps showing the positions of the buoys are generated into the `figs/tracking/` 
 ### Using non-SI3 input data: A-grid data
 
 First, create the `coordinates_mesh_mask.nc` file based on the A-grid on which the data is provided:
-
-```./tools/xy_arctic_to_meshmask.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc -o <path_data>/coordinates_mesh_mask.nc```
-
+```
+./tools/xy_arctic_to_meshmask.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc -o <path_data>/coordinates_mesh_mask.nc
+```
 Keep this file.
 
 
