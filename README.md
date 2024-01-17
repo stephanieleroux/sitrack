@@ -106,6 +106,7 @@ Maps showing the positions of the buoys are generated into the `figs/tracking/` 
 First, create the `coordinates_mesh_mask.nc` file based on the A-grid on which the data is provided:
 
 ```./tools/xy_arctic_to_meshmask.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc -o <path_data>/coordinates_mesh_mask.nc```
+
 Keep this file.
 
 
@@ -121,7 +122,7 @@ The seeding file `./nc/sitrack_seeding_debug_20240110_00.nc` has been generated
 and the image `./figs/SEEDING/sitrack_seeding_debug_20240110_00.png` shows you
 the initial position of the buoys on the map...
 
-Now you can run the tracking of the buoys:
+Now you can run the tracking of these buoys:
 
     ./si3_part_tracker.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc \
                           -m <path_data>/coordinates_mesh_mask.nc \
