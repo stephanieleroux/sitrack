@@ -35,10 +35,13 @@ toDegrees = 180./pi
 ifreq_plot = 12 ; # frequency, in terms of number of model records, we spawn a figure on the map (if idebug>2!!!)
 
 
+# In case of the C-grid:
 # iUVstrategy  #  What U,V should we use inside a given T-cell of the model?
 #              #  * 0 => C-grid => use the same MEAN velocity in the whole cell => U = 0.5*(U[j,i-1] + U[j,i]), V = 0.5*(V[j-1,i] + V[j,i])
 #              #  * 1 => C-grid => use the same NEAREST velocity in the whole cell => U = U[@ nearest U-point], V = V[@ nearest V-point]
 #              #  * 2 => A-grid => use the same MEAN velocity in the whole cell, the one given at the center of the point...
+iUVstrategy = 1
+
 
 def __argument_parsing__():
     '''
@@ -54,16 +57,17 @@ def __argument_parsing__():
     rqrdNam.add_argument('-i', '--fsi3', required=True,  help='output file of SI3 containing ice velocities ans co')
     rqrdNam.add_argument('-m', '--fmmm', required=True, help='model `mesh_mask` file of NEMO config used in SI3 run')
     rqrdNam.add_argument('-s', '--fsdg', required=True,  help='seeding file')
-    rqrdNam.add_argument('-S', '--istr', required=True, type=int, help='strategy for chosing what velocity vector we use within the cell (iUVstrategy)')
     #
+    parser.add_argument('-g', '--grid' , default='C',          help='type of the grid (point-arrangement) for data in input file [C/A] (default C)')
     parser.add_argument('-k', '--krec' , type=int, default=0,  help='record of seeding file to use to seed from')
     parser.add_argument('-e', '--dend' , default=None,         help='date at which to stop')
     parser.add_argument('-F', '--fxdt',  action=ap.BooleanOptionalAction)
     parser.add_argument('-N', '--ncnf' , default='NANUK4',     help='name of the horizontak NEMO config used')
     parser.add_argument('-p', '--plot' , type=int, default=0,  help='how often, in terms of model records, we plot the positions on a map')
     parser.add_argument('-R', '--hres' , type=int, default=20, help='horizontal resolution of the grid [km] (default=20km)')
-    parser.add_argument('-u', '--uname' , default='u_ice',     help='name of U-velocity component in inpute file (default: u_ice)')
-    parser.add_argument('-v', '--vname' , default='v_ice',     help='name of V-velocity component in inpute file (default: v_ice)')
+    parser.add_argument('-u', '--uname' , default='u_ice',     help='name of U-velocity component in input file (default: u_ice)')
+    parser.add_argument('-v', '--vname' , default='v_ice',     help='name of V-velocity component in input file (default: v_ice)')
+    parser.add_argument('-c', '--cname' , default='siconc',    help='name of sea-ice concentration in input file (default: siconc)')
     #
     args = parser.parse_args()
     print('')
@@ -77,7 +81,7 @@ def __argument_parsing__():
     #
     if args.fxdt: lUse2DTime = args.fxdt
     #
-    return args.fsi3, args.fmmm, args.fsdg, args.istr, args.krec, args.dend, args.ncnf, args.plot, args.hres, args.uname, args.vname
+    return args.fsi3, args.fmmm, args.fsdg, args.grid, args.krec, args.dend, args.ncnf, args.plot, args.hres, args.uname, args.vname, args.cname
 
 
 
@@ -90,7 +94,7 @@ if __name__ == '__main__':
     print('##########################################################\n')
 
 
-    cf_uv, cf_mm, fNCseed, iUVstrategy, jrecSeed, cdate_stop, CONF, ifreq_plot, ireskm, cv_u, cv_v = __argument_parsing__()
+    cf_uv, cf_mm, fNCseed,   gridType, jrecSeed, cdate_stop, CONF, ifreq_plot, ireskm, cv_u, cv_v, cv_A = __argument_parsing__()
 
     print(' lUse2DTime =',lUse2DTime)
     print('cf_uv =',cf_uv)
@@ -103,7 +107,11 @@ if __name__ == '__main__':
         print('cdate_stop =',cdate_stop)
     print('\n')
 
-    if not iUVstrategy in [0,1,2]:
+    if not gridType in ['C','A']:
+        print('ERROR: only "C" and "A" grids are supported for now...')
+        exit(0)
+    
+    if gridType=='C' and not iUVstrategy in [1,2]:
         print('ERROR: `iUVstrategy` with a value of '+str(iUVstrategy)+' is unknown!')
         exit(0)
 
@@ -187,7 +195,7 @@ if __name__ == '__main__':
     imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = sit.GetModelGrid( cf_mm )
 
 
-    if iUVstrategy==1:
+    if gridType=='C' and iUVstrategy==1:
         # Get extra U,V-point metrics:
         xYv, xXv, xYu, xXu = sit.GetModelUVGrid( cf_mm )
         
@@ -222,7 +230,7 @@ if __name__ == '__main__':
         # ----------------------------------------------------
 
         with Dataset(cf_uv) as ds_UVmod:
-            xIC[:,:] = ds_UVmod.variables['siconc'][kstrt,:,:] ; # We need ice conc. at `t=kstrt` so we can cancel buoys accordingly
+            xIC[:,:] = ds_UVmod.variables[cv_A][kstrt,:,:] ; # We need ice conc. at `t=kstrt` so we can cancel buoys accordingly
 
         zt, zIDs, XseedG, XseedC = sit.LoadNCdata( fNCseed, krec=jrecSeed, iverbose=idebug )
         print('     => data used for seeding is read at date =',e2c(zt),'\n        (shape of XseedG =',np.shape(XseedG),')')
@@ -376,7 +384,7 @@ if __name__ == '__main__':
               ctime,'(model:'+e2c(itmod)+')')
         vTime[jt] = itime
 
-        xIC[:,:] = ds_UVmod.variables['siconc'][jrec,:,:]
+        xIC[:,:] = ds_UVmod.variables[cv_A][jrec,:,:]
         xUu[:,:] = ds_UVmod.variables[cv_u][jrec,:,:]
         xVv[:,:] = ds_UVmod.variables[cv_v][jrec,:,:]
 
@@ -425,33 +433,37 @@ if __name__ == '__main__':
                 # j,i indices of the cell we are dealing with = that of the F-point aka the upper-right point !!!
                 [jT,iT] = vJIt[jP,:]
 
-                # ASSUMING THAT THE ENTIRE CELL IS MOVING AT THE SAME VELOCITY: THAT OF U-POINT OF CELL
-                # zU, zV = xUu[jT,iT], xVv[jT,iT] ; # because the F-point is the upper-right corner
-                if   iUVstrategy == 0:
-                    zU = 0.5*(xUu[jT,iT]+xUu[jT,iT-1])
-                    zV = 0.5*(xVv[jT,iT]+xVv[jT-1,iT])
+                if gridType=='C':
+                    # ASSUMING THAT THE ENTIRE CELL IS MOVING AT THE SAME VELOCITY: THAT OF U-POINT OF CELL
+                    # zU, zV = xUu[jT,iT], xVv[jT,iT] ; # because the F-point is the upper-right corner
                     #
-                elif iUVstrategy == 1:
-                    # If the segment that goes from our buoy position to the F-point of the cell
-                    # intersects the segment that joins the 2 V-points of the cell (v[j-1,i],v[j,i]),
-                    # then it means that the nearest U-point is the one at `i-1` !
-                    Fpnt = [xYf[jT,iT],xXf[jT,iT]] ; # y,x coordinates of the F-point of the cell
-                    llum1 = sit.intersect2Seg( [ry,rx], Fpnt,  [xYv[jT-1,iT],xXv[jT-1,iT]], [xYv[jT,iT],xXv[jT,iT]] )
-                    llvm1 = sit.intersect2Seg( [ry,rx], Fpnt,  [xYu[jT,iT-1],xXu[jT,iT-1]], [xYu[jT,iT],xXu[jT,iT]] )
-                    if llum1:
-                        zU = xUu[jT,iT-1]
-                    else:
-                        zU = xUu[jT,iT]
-                    if llvm1:
-                        zV = xVv[jT-1,iT]
-                    else:
-                        zV = xVv[jT,iT]
-                    if idebug>1:
-                        print( ' ++ Buoy position is:',ry,rx)
-                        print( ' ++ position of lhs & rhs U-point:',xYu[jT,iT-1],xXu[jT,iT-1], xYu[jT,iT],xXu[jT,iT], ' llum1=',llum1)
-                        print( ' ++ position of lower & upper V-point:',xYv[jT,iT-1],xXv[jT,iT-1], xYv[jT,iT],xXv[jT,iT], ' llvm1=',llvm1)
+                    if   iUVstrategy == 0:
+                        # Using velocity interpolated at the T-point for the whole cell:
+                        zU = 0.5*(xUu[jT,iT]+xUu[jT,iT-1])
+                        zV = 0.5*(xVv[jT,iT]+xVv[jT-1,iT])
                         #
-                elif iUVstrategy == 2:
+                    elif iUVstrategy == 1:
+                        # If the segment that goes from our buoy position to the F-point of the cell
+                        # intersects the segment that joins the 2 V-points of the cell (v[j-1,i],v[j,i]),
+                        # then it means that the nearest U-point is the one at `i-1` !
+                        Fpnt = [xYf[jT,iT],xXf[jT,iT]] ; # y,x coordinates of the F-point of the cell
+                        llum1 = sit.intersect2Seg( [ry,rx], Fpnt,  [xYv[jT-1,iT],xXv[jT-1,iT]], [xYv[jT,iT],xXv[jT,iT]] )
+                        llvm1 = sit.intersect2Seg( [ry,rx], Fpnt,  [xYu[jT,iT-1],xXu[jT,iT-1]], [xYu[jT,iT],xXu[jT,iT]] )
+                        if llum1:
+                            zU = xUu[jT,iT-1]
+                        else:
+                            zU = xUu[jT,iT]
+                        if llvm1:
+                            zV = xVv[jT-1,iT]
+                        else:
+                            zV = xVv[jT,iT]
+                        if idebug>1:
+                            print( ' ++ Buoy position is:',ry,rx)
+                            print( ' ++ position of lhs & rhs U-point:',xYu[jT,iT-1],xXu[jT,iT-1], xYu[jT,iT],xXu[jT,iT], ' llum1=',llum1)
+                            print( ' ++ position of lower & upper V-point:',xYv[jT,iT-1],xXv[jT,iT-1], xYv[jT,iT],xXv[jT,iT], ' llvm1=',llvm1)
+                            #
+                            
+                elif gridType=='A':
                     # A-grid, easy!!!
                     zU = xUu[jT,iT]
                     zV = xVv[jT,iT]

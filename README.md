@@ -16,7 +16,10 @@ A Lagrangian Sea-Ice Particule Tracker for SI3 (or any sea-ice GCM running on th
  ```
  export PYTHONPATH=<absolute_path_to_somewhere>/mojito:${PYTHONPATH}
  ```
- 
+
+#### Python basemap
+Required if you want to use the plotting functionality (usually triggered with `iplot=1` in the various scripts).
+
 
 ### Getting started with `sitrack`
 
@@ -50,7 +53,7 @@ If everything goes according to plan, you should have obtained:
 - the netCDF files do be used by `sitrack` that contains the location of virtual buoys to seed: `nc/sitrack_seeding_nemoTsi3_19961215_00_HSS5.nc`
 
 
-Alternatively, you can create your own netCDF seeding file, provided you respect the following organisation and naming convention:
+Alternatively, you can create your own netCDF seeding file, provided you respect the following organization and naming convention:
 ```
 dimensions:
         time = UNLIMITED ; // (1 currently)
@@ -98,24 +101,30 @@ Maps showing the positions of the buoys are generated into the `figs/tracking/` 
 
 
 
-### In progress: using CMEMS / NEXTSIM-F data files:
+### Using non-SI3 input data: A-grid data
 
-```
-./si3_part_tracker.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc \
-                      -m <path_data>/coordinates_meshmask.nc \
-                      -s ./nc/sitrack_seeding_debug_20240110_00.nc \
-                      -R 3 -S 2 -u vxsi -v vysi -p 3
-```
+First, create the `coordinates_mesh_mask.nc` file based on the A-grid on which the data is provided:
 
-`coordinates_meshmask.nc` created with:
+```./tools/xy_arctic_to_meshmask.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc -o <path_data>/coordinates_mesh_mask.nc```
+Keep this file.
 
 
-```
-./tools/xy_arctic_to_meshmask.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc
-```
+Now, you should generate a seeding file, containing the initial position, in
+space (geographical aka GPS coordinates) and time, of the buoys you wish to
+track. Here, in the example we are just using the *debug* functionality that
+seeds buoys with initial position hard-coded into function `debugSeeding()` of
+`sitrack/tracking.py`:
 
-`sitrack_seeding_debug_20240110_00.nc` created with:
+```./tools/generate_idealized_seeding.py -d 2024-01-10_00:00:00```
 
-```
-./tools/generate_idealized_seeding.py -d 2024-01-10_00:30:00
-```
+The seeding file `./nc/sitrack_seeding_debug_20240110_00.nc` has been generated
+and the image `./figs/SEEDING/sitrack_seeding_debug_20240110_00.png` shows you
+the initial position of the buoys on the map...
+
+Now you can run the tracking of the buoys:
+
+    ./si3_part_tracker.py -i <path_data>/20240110_hr-nersc-MODEL-nextsimf-ARC-b20240111-fv00.0.nc \
+                          -m <path_data>/coordinates_mesh_mask.nc \
+                          -s ./nc/sitrack_seeding_debug_20240110_00.nc \
+                          -g A -R 3 -u vxsi -v vysi -p 12
+
