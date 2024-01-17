@@ -535,7 +535,10 @@ if __name__ == '__main__':
     cdt1, cdt2 = split(':',e2c(vTime[0]))[0] , split(':',e2c(vTime[Nt]))[0] ; # keeps at the hour precision...
     cdt1, cdt2 = str.replace( cdt1, '-', '') , str.replace( cdt2, '-', '')
     cdt1, cdt2 = str.replace( cdt1, '_', 'h') , str.replace( cdt2, '_', 'h')
-    corgn = 'NEMO-SI3_'+ModConf+'_'+ModExp
+    if gridType=='C':
+        corgn = 'NEMO-SI3_'+ModConf+'_'+ModExp
+    elif gridType=='A':
+        corgn = 'data_A-grid_'+ModConf+'_'+ModExp
 
     if not lUse2DTime:
         # Save series at each model time step:
