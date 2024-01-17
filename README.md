@@ -99,7 +99,7 @@ Maps showing the positions of the buoys are generated into the `figs/tracking/` 
 
 
 
-
+<br>
 ### Using non-SI3 input data: A-grid data
 
 First, create the `coordinates_mesh_mask.nc` file based on the A-grid on which the data is provided:
