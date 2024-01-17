@@ -113,7 +113,7 @@ Keep this file.
 Now, you should generate a seeding file, containing the initial position, in
 space (geographical aka GPS coordinates) and time, of the buoys you wish to
 track. Here, in the example we are just using the *debug* functionality that
-seeds buoys with initial position hard-coded into function `debugSeeding()` of
+seeds buoys with their initial positions hard-coded into function `debugSeeding()` of
 `sitrack/tracking.py`:
 
 ```./tools/generate_idealized_seeding.py -d 2024-01-10_00:00:00```
