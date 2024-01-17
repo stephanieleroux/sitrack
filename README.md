@@ -86,12 +86,11 @@ Example:
 si3_part_tracker.py -i <PATH_TO_DEMO_DIR>/NANUK4/NANUK4-BBM23U06_1h_19961215_19970420_icemod.nc \
                     -m <PATH_TO_DEMO_DIR>/NANUK4/mesh_mask_NANUK4_L31_4.2_1stLev.nc \
                     -s ./nc/sitrack_seeding_nemoTsi3_19961215_00_HSS5.nc
-                    -e 1997-04-20 -N NANUK4 -F -p 24
+                    -e 1997-04-20 -N NANUK4 -p 24
 ```
 - `-s`: specifies the seeding file to use
 - `-e`: specifies the end date
-- `-F`: all buoys use the same time axis
-- `-p 24`: tells `si3_part_tracker.py` to create an image of the positions of the buoys every 24 model records (_i.e._ hours)
+- `-p 24`: tells `si3_part_tracker.py` to create an image of the positions of the buoys every 24 model records  (_i.e._ daily in this case)
 
 Trajectories of virtual buoys are saved into file:<br>
 `nc/NEMO-SI3_NANUK4_BBM23U06_tracking_nemoTsi3_idlSeed_19961215h00_19970420h00.nc`
@@ -128,4 +127,8 @@ Now you can run the tracking of these buoys:
                           -m <path_data>/coordinates_mesh_mask.nc \
                           -s ./nc/sitrack_seeding_debug_20240110_00.nc \
                           -g A -R 3 -u vxsi -v vysi -p 12
+- `-g A`: input data is on the A-grid, not a C-grid as for SI3 data
+- `-R 3`: nominal spatial resolution of the input data is 3 km
+- `-u vxsi -v vysi`: name of `u,v` into into input netCDF file
+- `-p 12`: tells `si3_part_tracker.py` to create an image of the positions of the buoys every 12 model records (_i.e._ 12 hours in this case)
 
