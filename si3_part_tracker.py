@@ -61,7 +61,7 @@ def __argument_parsing__():
     parser.add_argument('-g', '--grid' , default='C',          help='type of the grid (point-arrangement) for data in input file [C/A] (default C)')
     parser.add_argument('-k', '--krec' , type=int, default=0,  help='record of seeding file to use to seed from')
     parser.add_argument('-e', '--dend' , default=None,         help='date at which to stop')
-    parser.add_argument('-F', '--fxdt',  action=ap.BooleanOptionalAction)
+    parser.add_argument('-F', '--force2dtime',  action=ap.BooleanOptionalAction, help='buoys are not using the same common time axis, so time array will be 2D! (default=False)')
     parser.add_argument('-N', '--ncnf' , default='NANUK4',     help='name of the horizontak NEMO config used')
     parser.add_argument('-p', '--plot' , type=int, default=0,  help='how often, in terms of model records, we plot the positions on a map')
     parser.add_argument('-R', '--hres' , type=int, default=20, help='horizontal resolution of the grid [km] (default=20km)')
@@ -79,7 +79,7 @@ def __argument_parsing__():
     if args.ncnf:
         print(' *** Name of the horizontak NEMO config used => ', args.ncnf)
     #
-    if args.fxdt: lUse2DTime = args.fxdt
+    if args.force2dtime: lUse2DTime = args.force2dtime
     #
     return args.fsi3, args.fmmm, args.fsdg, args.grid, args.krec, args.dend, args.ncnf, args.plot, args.hres, args.uname, args.vname, args.cname
 
