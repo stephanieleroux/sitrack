@@ -17,7 +17,7 @@ A Lagrangian Sea-Ice Particule Tracker for SI3 (or any sea-ice GCM running on th
  export PYTHONPATH=<absolute_path_to_somewhere>/mojito:${PYTHONPATH}
  ```
 
-#### Python basemap
+#### `python-basemap`
 Required if you want to use the plotting functionality (usually triggered with `iplot=1` in the various scripts).
 
 
