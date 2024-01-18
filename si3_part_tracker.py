@@ -191,9 +191,8 @@ if __name__ == '__main__':
     for cd in [ 'seed', 'nc', 'npz' ]:
         makedirs( cd, exist_ok=True )
 
-    # Getting model grid metrics and friends:
+    # Getting model grid metrics and friends in the coorinates/meshmask file:
     imaskt, xlatT, xlonT, xYt, xXt, xYf, xXf, xResKM = sit.GetModelGrid( cf_mm )
-
 
     if gridType=='C' and iUVstrategy==1:
         # Get extra U,V-point metrics:

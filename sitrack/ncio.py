@@ -47,10 +47,27 @@ def ConvertTimeToEpoch( vtime, units, calendar ):
 
 def GetModelGrid( fNCmeshmask, alsoF=False ):
 
+    l_CartesianCoordPresent = False ; # by default we assume that Cartesian X,Y coordinates are not present in `fNCmeshmask` !
+    
     chck4f( fNCmeshmask)
-
+    
     # Reading mesh metrics into mesh-mask file:
     with Dataset(fNCmeshmask) as id_mm:
+        #
+        # Checking whether Cartesian coordinates are already present or not in `fNCmeshmask`:
+        listv = list(id_mm.variables.keys())
+        #
+        l_CartesianCoordPresent = ( ('y_pos_t' in listv) and ('x_pos_t' in listv) and ('y_pos_f' in listv) and ('x_pos_f' in listv ) )
+        if l_CartesianCoordPresent:
+            print('    * [GetModelGrid]: Cartesian coordinates are already present in file "'+fNCmeshmask+'" !')
+            print('                      => will skip applying a projection!')
+        else:
+            print('    * [GetModelGrid]: WARNING! Cartesian coordinates (x,y [km]), not found in "'+fNCmeshmask+'" !')
+            print('                      => will apply a projection to create them!')
+            print('                      => if it is a mistake and they do exist, then they should be named:')
+            print('                         "y_pos_t", "x_pos_t", "y_pos_f", and "x_pos_f"')
+            print('                         and be in km, not m !')
+        #
         ndim = len(id_mm.variables['glamt'].shape)
         if ndim==2:
             kmaskt = id_mm.variables['tmask'][:,:]
@@ -60,6 +77,11 @@ def GetModelGrid( fNCmeshmask, alsoF=False ):
             zlatT  = id_mm.variables['gphit'][:,:]
             ze1T   = id_mm.variables['e1t'][:,:] / 1000. ; # km
             ze2T   = id_mm.variables['e2t'][:,:] / 1000. ; # km
+            if l_CartesianCoordPresent:
+                zYt = id_mm.variables['y_pos_t'][:,:]
+                zXt = id_mm.variables['x_pos_t'][:,:]
+                zYf = id_mm.variables['y_pos_f'][:,:]
+                zXf = id_mm.variables['x_pos_f'][:,:]                
             if alsoF:
                 kmaskf = id_mm.variables['fmask'][:,:]
             #
@@ -71,27 +93,31 @@ def GetModelGrid( fNCmeshmask, alsoF=False ):
             zlatT  = id_mm.variables['gphit'][0,:,:]
             ze1T   = id_mm.variables['e1t'][0,:,:] / 1000. ; # km
             ze2T   = id_mm.variables['e2t'][0,:,:] / 1000. ; # km
+            if l_CartesianCoordPresent:
+                zYt = id_mm.variables['y_pos_t'][0,:,:]
+                zXt = id_mm.variables['x_pos_t'][0,:,:]
+                zYf = id_mm.variables['y_pos_f'][0,:,:]
+                zXf = id_mm.variables['x_pos_f'][0,:,:]                
             if alsoF:
                 kmaskf = id_mm.variables['fmask'][0,0,:,:]
         else:
             print(' ERROR [GetModelGrid]: unexpected number of dimmensions for variable `glamt` !')
             exit(0)
     #
+    kmaskt  = np.array(kmaskt, dtype='i1')
+    zlonT   = np.mod( zlonT, 360. )
+    zlonF   = np.mod( zlonF, 360. )
     (nj,ni) = np.shape(kmaskt)
-
-    kmaskt = np.array(kmaskt, dtype='i1')
-
-    zXt = np.zeros((nj,ni))
-    zYt = np.zeros((nj,ni))
-    zXf = np.zeros((nj,ni))
-    zYf = np.zeros((nj,ni))
-
-    # Conversion from Geographic coordinates (lat,lon) to Cartesian in km,
-    #  ==> same North-Polar-Stereographic projection as RGPS data...
-    zlonT = np.mod( zlonT, 360. )
-    zlonF = np.mod( zlonF, 360. )
-    zYt[:,:], zXt[:,:] = ConvertGeo2CartesianNPSkm(zlatT, zlonT)
-    zYf[:,:], zXf[:,:] = ConvertGeo2CartesianNPSkm(zlatF, zlonF)
+    #
+    if not l_CartesianCoordPresent:
+        # Conversion from Geographic coordinates (lat,lon) to Cartesian in km,
+        #  ==> same North-Polar-Stereographic projection as RGPS data...        
+        zXt = np.zeros((nj,ni))
+        zYt = np.zeros((nj,ni))
+        zXf = np.zeros((nj,ni))
+        zYf = np.zeros((nj,ni))
+        zYt[:,:], zXt[:,:] = ConvertGeo2CartesianNPSkm(zlatT, zlonT)
+        zYf[:,:], zXf[:,:] = ConvertGeo2CartesianNPSkm(zlatF, zlonF)
 
     # Local resolution in km (for ):
     zResKM = np.zeros((nj,ni))
@@ -248,8 +274,8 @@ def LoadNCtime( cfile, ltime2d=False, iverbose=0 ):
         if not 'time' in list_dim:
             print(' ERROR [LoadNCtime()]: no dimensions `'+time+'` found into input file!'); exit(0)
         #
-        list_var = list( id_in.variables.keys() )
-        if not 'time' in list_var:
+        listv = list( id_in.variables.keys() )
+        if not 'time' in listv:
             print(' ERROR [LoadNCtime()]: no variable `'+time+'` found into input file!'); exit(0)
         Nt = id_in.dimensions['time'].size
 
@@ -261,7 +287,7 @@ def LoadNCtime( cfile, ltime2d=False, iverbose=0 ):
         ztime = id_in.variables['time'][:]
 
         if ltime2d:
-            if not 'time_pos' in list_var:
+            if not 'time_pos' in listv:
                 print(' ERROR [LoadNCtime()]: no variable `'+time_pos+'` found into input file!'); exit(0)
             ctunits = id_in.variables['time_pos'].units
             if not ctunits == tunits_default:
@@ -287,9 +313,9 @@ def LoadNCdata( cfile, krec=-1, lmask=False, lGetTimePos=False, iverbose=0 ):
 
     '''
     #
-    list_var_needed = ['id_buoy','latitude','longitude','y_pos','x_pos']
+    listv_needed = ['id_buoy','latitude','longitude','y_pos','x_pos']
     if lGetTimePos:
-        list_var_needed.append('time_pos')
+        listv_needed.append('time_pos')
 
     chck4f(cfile)
     with Dataset(cfile) as id_in:
@@ -299,9 +325,9 @@ def LoadNCdata( cfile, krec=-1, lmask=False, lGetTimePos=False, iverbose=0 ):
             if not cd in list_dim:
                 print(' ERROR [LoadNCdata()]: no dimensions `'+cd+'` found into input file!'); exit(0)
 
-        list_var = list( id_in.variables.keys() )
-        for cv in list_var_needed:
-            if not cv in list_var:
+        listv = list( id_in.variables.keys() )
+        for cv in listv_needed:
+            if not cv in listv:
                 print(' ERROR [LoadNCdata()]: no variable `'+cv+'` found into input file!'); exit(0)
 
         Nt = id_in.dimensions['time'].size

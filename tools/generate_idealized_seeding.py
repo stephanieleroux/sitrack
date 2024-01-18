@@ -20,13 +20,13 @@ from random import random, choices
 
 
 idebug=0
-iplot=1
+iplot=0
 
 #lRandomize = True ; rDssAmpl = 0.001
 
 seeding_type='debug' ; # By default, ha
 
-ldo_coastal_clean = True
+ldo_coastal_clean = False
 distMax=100 ; distMin = 100 ; # how far from the nearest coast should our buoys be? [km]
 fdist2coast_nc = 'dist2coast/dist2coast_4deg_North.nc'
 
