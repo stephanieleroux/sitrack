@@ -17,6 +17,13 @@ list_required_var_RGPS = [ 'index', 'x', 'y', 'lon', 'lat', 'time', 'idstream', 
 
 FillValue = -9999.
 
+# Naming convention for Cartesian coordinates in km:
+nm_y_t, nm_x_t = 'y_pos_t', 'x_pos_t' ; # at center of grid cell (T-point)
+nm_y_f, nm_x_f = 'y_pos_f', 'x_pos_f' ; # at upper-right corner of grid cell (F-point)
+nm_y_u, nm_x_u = 'y_pos_u', 'x_pos_u' ; # at center of rhs cell edge (U-point)
+nm_y_v, nm_x_v = 'y_pos_v', 'x_pos_v' ; # at center of upper cell edge (V-point)
+
+
 
 def GetNameTimeDim( fnc_hndl ):
     '''
@@ -57,7 +64,7 @@ def GetModelGrid( fNCmeshmask, alsoF=False ):
         # Checking whether Cartesian coordinates are already present or not in `fNCmeshmask`:
         listv = list(id_mm.variables.keys())
         #
-        l_CartesianCoordPresent = ( ('y_pos_t' in listv) and ('x_pos_t' in listv) and ('y_pos_f' in listv) and ('x_pos_f' in listv ) )
+        l_CartesianCoordPresent = ( (nm_y_t in listv) and (nm_x_t in listv) and (nm_y_f in listv) and (nm_x_f in listv ) )
         if l_CartesianCoordPresent:
             print('    * [GetModelGrid]: Cartesian coordinates are already present in file "'+fNCmeshmask+'" !')
             print('                      => will skip applying a projection!')
@@ -65,7 +72,7 @@ def GetModelGrid( fNCmeshmask, alsoF=False ):
             print('    * [GetModelGrid]: WARNING! Cartesian coordinates (x,y [km]), not found in "'+fNCmeshmask+'" !')
             print('                      => will apply a projection to create them!')
             print('                      => if it is a mistake and they do exist, then they should be named:')
-            print('                         "y_pos_t", "x_pos_t", "y_pos_f", and "x_pos_f"')
+            print('                         "'+nm_y_t+'", "'+nm_x_t+'", "'+nm_y_f+'", and "'+nm_x_f+'"')
             print('                         and be in km, not m !')
         #
         ndim = len(id_mm.variables['glamt'].shape)
@@ -78,10 +85,10 @@ def GetModelGrid( fNCmeshmask, alsoF=False ):
             ze1T   = id_mm.variables['e1t'][:,:] / 1000. ; # km
             ze2T   = id_mm.variables['e2t'][:,:] / 1000. ; # km
             if l_CartesianCoordPresent:
-                zYt = id_mm.variables['y_pos_t'][:,:]
-                zXt = id_mm.variables['x_pos_t'][:,:]
-                zYf = id_mm.variables['y_pos_f'][:,:]
-                zXf = id_mm.variables['x_pos_f'][:,:]                
+                zYt = id_mm.variables[nm_y_t][:,:]
+                zXt = id_mm.variables[nm_x_t][:,:]
+                zYf = id_mm.variables[nm_y_f][:,:]
+                zXf = id_mm.variables[nm_x_f][:,:]                
             if alsoF:
                 kmaskf = id_mm.variables['fmask'][:,:]
             #
@@ -94,10 +101,10 @@ def GetModelGrid( fNCmeshmask, alsoF=False ):
             ze1T   = id_mm.variables['e1t'][0,:,:] / 1000. ; # km
             ze2T   = id_mm.variables['e2t'][0,:,:] / 1000. ; # km
             if l_CartesianCoordPresent:
-                zYt = id_mm.variables['y_pos_t'][0,:,:]
-                zXt = id_mm.variables['x_pos_t'][0,:,:]
-                zYf = id_mm.variables['y_pos_f'][0,:,:]
-                zXf = id_mm.variables['x_pos_f'][0,:,:]                
+                zYt = id_mm.variables[nm_y_t][0,:,:]
+                zXt = id_mm.variables[nm_x_t][0,:,:]
+                zYf = id_mm.variables[nm_y_f][0,:,:]
+                zXf = id_mm.variables[nm_x_f][0,:,:]                
             if alsoF:
                 kmaskf = id_mm.variables['fmask'][0,0,:,:]
         else:
