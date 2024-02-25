@@ -56,6 +56,7 @@ def __argument_parsing__():
     parser.add_argument('-f', '--fmsk' , default=None,        help='mask (on SI3 model domain) to control seeding region')
     parser.add_argument('-C', '--crsn' , type=int, default=0, help='apply this coarsening in km')
     parser.add_argument('-N', '--ncnf' , default='NANUK4',    help='name of the horizontak NEMO config used')
+    parser.add_argument('--lsidfex' , type=int,default=0,     help='Switch to 1 for SIDFEX seeding.') 
     args = parser.parse_args()
 
     if args.fsi3 and not args.fmmm:
@@ -78,9 +79,11 @@ def __argument_parsing__():
         print(' *** Will apply a coarsening on cloud of points, at scale => ', args.crsn,'km' )
     if args.ncnf:
         print(' *** Name of the horizontak NEMO config used => ', args.ncnf)
-
+    # SLX:
+    if args.lsidfex:
+        print(' *** SIDFEX seeding? => ', args.lsidfex)
     #
-    return args.dat0, args.fsi3, args.nsic, args.krec, args.fmmm, args.ihss, args.fmsk, args.crsn, args.ncnf
+    return args.dat0, args.fsi3, args.nsic, args.krec, args.fmmm, args.ihss, args.fmsk, args.crsn, args.ncnf, args.lsidfex
 
 
 
@@ -107,7 +110,7 @@ if __name__ == '__main__':
     lnemoMM  = False
     lnemoSI3 = False
         
-    cdate0, cf_si3, cv_sic, krec, cf_mm, iHSS, cf_force_msk, icrsn, CONF = __argument_parsing__()
+    cdate0, cf_si3, cv_sic, krec, cf_mm, iHSS, cf_force_msk, icrsn, CONF, lsidfex = __argument_parsing__()
 
     if cf_mm:
         lnemoMM  = True
@@ -235,6 +238,12 @@ if __name__ == '__main__':
         if idebug in [0,1,2]: XseedGC = sit.debugSeeding()
         if idebug in [3]:     XseedGC = sit.debugSeeding1()
         #
+     # SLX
+    elif seeding_type=='sidfex':
+        XseedGC,zIDs = sit.SidfexSeeding()
+        print(XseedGC)
+        print(zIDs)
+        #
     else:
          print(' ERROR: `seeding_type` =',seeding_type,' is unknown!')
          exit(0)
@@ -245,8 +254,9 @@ if __name__ == '__main__':
 
 
 
-
-    zIDs = np.array([ i+1 for i in range(nP) ] , dtype=int)
+    # SLX   
+    if not seeding_type=='sidfex':
+          zIDs = np.array([ i+1 for i in range(nP) ] , dtype=int)
 
     zTime = np.array( [ mjt.clock2epoch(cdate0) ], dtype='i4' )    
     print('\n * Requested initialization date =', mjt.epoch2clock(zTime[0]))
