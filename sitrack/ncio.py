@@ -226,7 +226,7 @@ def ncSaveCloudBuoys( cf_out, ptime, pIDs, pY, pX, pLat, pLon, mask=[], xtime=[]
     # Variables:
     v_time = f_out.createVariable(cd_time,     'i4',(cd_time,))
     v_buoy = f_out.createVariable(cd_buoy,     'i4',(cd_buoy,))
-    v_bid  = f_out.createVariable('id_buoy',   'i4',(cd_buoy,))
+    v_bid  = f_out.createVariable('id_buoy',   'i8',(cd_buoy,))
     x_lat  = f_out.createVariable('latitude' , 'f4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
     x_lon  = f_out.createVariable('longitude', 'f4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
     x_ykm  = f_out.createVariable('y_pos' ,    'f4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
@@ -245,7 +245,7 @@ def ncSaveCloudBuoys( cf_out, ptime, pIDs, pY, pX, pLat, pLon, mask=[], xtime=[]
         x_tim  = f_out.createVariable('time_pos', 'i4',(cd_time,cd_buoy,), fill_value=fillVal, zlib=True, complevel=9)
         x_tim.units = tunits
     #
-    v_buoy[:] = np.arange(Nb,dtype='i4')
+    v_buoy[:] = np.arange(Nb,dtype='i8')
     v_bid[:]  = pIDs[:]
     #
     for jt in range(Nt):
