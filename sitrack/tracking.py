@@ -334,6 +334,37 @@ def debugSeeding1():
     zLatLon = np.array([ [75.,190.] ])
     return zLatLon
 
+def SidfexSeeding( filepath='./sidfexloc.dat' ):
+    ''' Generate seeding lon lat from sidfex buoys read from text file.
+    Returns an array with lat lon and another with buoy IDs.
+    SLX
+    '''
+    print("============= SIDFEX SEEDING")
+    #debug example zLatLon = np.array([ [75.,190.] ])
+    sidfexdat = ReadFromSidfexDatFile( filepath )
+    zLatLon = sidfexdat[:,[2,1]] # reverse order of columns so that it is now lat lon.
+    zIDs = sidfexdat[:,0].astype(int)
+    return zLatLon,zIDs 
+
+
+def ReadFromSidfexDatFile( filepath='./sidfexloc.dat' ):
+    '''
+         Reads from text file sidfex.dat and returns an array with id, lon, lat for all sidfex buoys at a given date.
+         SLX
+    '''
+    from os.path import exists
+    if (exists(filepath)):
+        # reads buoys id and locations (lon lat) from text file
+        listbuoys = np.genfromtxt(open(filepath))
+        # Keep track of how many buoys are read in input file
+        NBUOYTOTR=listbuoys.shape[0]
+        print("======== Nb of buoys read from sidfex file......"+str(NBUOYTOTR)) 
+    else:
+        print("============================================") 
+        print("=== Error ! 'sidfexloc.dat' file is missing.")
+        print("============================================") 
+        exit(0)
+    return listbuoys
 
 def nemoSeed( pmskT, platT, plonT, pIC, khss=1, fmsk_rstrct=[],
               platF=[], plonF=[] ):
